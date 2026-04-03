@@ -1,4 +1,4 @@
-SRCS= Cache.cpp Server.cpp main.cpp
+SRCS= Cache.cpp Server.cpp main.cpp Response.cpp Request.cpp
 INCS= Cache.hpp Server.hpp
 OBJS= $(SRCS:%.cpp=%.o)
 NAME= redihh

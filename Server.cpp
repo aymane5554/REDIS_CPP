@@ -31,12 +31,6 @@ void Server::run()
             else if (events[i].events & EPOLLIN)
             {
                 // recv request
-                char buff[BUF_SIZE];
-                ssize_t len = read(fd, buff, BUF_SIZE);
-                buff[len] = '\0';
-                std::cout << buff << std::endl;
-                epoll_ctl(epoll_fd,EPOLL_CTL_DEL, fd, &events[i]);
-                close(fd);
             }
             else if (events[i].events & EPOLLOUT)
             {
