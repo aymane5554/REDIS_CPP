@@ -10,38 +10,45 @@ void lines(str &req_buff, std::vector<str> &cmd, int &lines, int &bytes)
 
     if (lines == 0)
     {
-        indx = req_buff.find("\r\n", start); // what if he sent 1 then waited the sent 0
+        indx = req_buff.find("\r\n", start);
         if (req_buff[0] != '*')
-            throw std::runtime_error("bad request");
+            throw std::runtime_error("line length");
         try
         {
             lines = std::stoi(req_buff.substr(1), &end);
-            if (lines < 0 || req_buff.substr(end + 1) != "\r\n")
-                throw std::runtime_error("bad request");
         }
         catch(const std::exception& e)
         {
-            throw std::runtime_error("bad request");
+            throw std::runtime_error("parsing lines number");
         }
+        if (lines < 0 || req_buff.substr(end + 1, 2) != "\r\n")
+            throw std::runtime_error("line length unvalid number");
         start = indx + 2;
-        indx = req_buff.find("\r\n", start);
     }
     indx = req_buff.find("\r\n", start);
     while (indx != str::npos)
     {
-        line = req_buff.substr(start, indx);
+        line = req_buff.substr(start, indx - start);
         if (line[0] != '$')
         {
             if ((int)line.size() != bytes)
-                throw std::runtime_error("bad request");
+                throw std::runtime_error("missing bytes length");
             cmd.push_back(line);
             bytes = -1;
         }
         else
         {
-            bytes = std::stoi(line.substr(1), &end);
+            try
+            {
+                bytes = std::stoi(line.substr(1), &end);
+            }
+            catch (const std::exception& e)
+            {
+                throw std::runtime_error("parsing bytes number");
+            }
+            std::cout << "line {" << line << "}"<< std::endl; 
             if (bytes < 0 || line[end + 1])
-                throw std::runtime_error("bad request");
+                throw std::runtime_error("unvalid bytes number");
         }
         start = indx + 2;
         indx = req_buff.find("\r\n", start);
@@ -71,8 +78,11 @@ void Server::parse_request(int fd)
         return ;
     }
     client.req_buff.append(buff, len);
+    std::cout << "REQUEST {\n"<< client.req_buff << "}" << std::endl;
+    if (client.req_buff.find("\r\n") == str::npos)
+        return;
     lines(client.req_buff, client.cmd, client.lines, client.bytes);
-    client.req_buff.clear();
+    client.req_buff = client.req_buff.substr(client.req_buff.find_last_of("\r\n") + 1);
     if (client.lines == (int)client.cmd.size())
         make_client_writable(fd, epoll_fd);
 }

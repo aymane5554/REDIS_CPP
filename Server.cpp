@@ -50,6 +50,10 @@ void Server::run()
                 else if (events[i].events & EPOLLOUT)
                 {
                     // send_response(fd);
+                    for (size_t i = 0; i < clients[fd].cmd.size(); i++)
+                    {
+                        std::cout << clients[fd].cmd[i] << std::endl;
+                    }
                     safe_close(fd);
                 }
                 else if ((events[i].events & EPOLLHUP) || (events[i].events & EPOLLERR))
