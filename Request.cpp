@@ -46,7 +46,6 @@ void lines(str &req_buff, std::vector<str> &cmd, int &lines, int &bytes)
             {
                 throw std::runtime_error("parsing bytes number");
             }
-            std::cout << "line {" << line << "}"<< std::endl; 
             if (bytes < 0 || line[end + 1])
                 throw std::runtime_error("unvalid bytes number");
         }
@@ -78,7 +77,6 @@ void Server::parse_request(int fd)
         return ;
     }
     client.req_buff.append(buff, len);
-    std::cout << "REQUEST {\n"<< client.req_buff << "}" << std::endl;
     if (client.req_buff.find("\r\n") == str::npos)
         return;
     lines(client.req_buff, client.cmd, client.lines, client.bytes);
