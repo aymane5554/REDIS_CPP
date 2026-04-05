@@ -37,6 +37,7 @@ struct Client
 class Server
 {
     std::unordered_map <int, Client> clients;
+    std::unordered_map <str, void(Server::*)(void)> cmd_func;
     Cache cache;
     int server_fd;
     int epoll_fd;
@@ -45,6 +46,13 @@ class Server
         void parse_request(int fd);
         void send_response(int fd);
         void safe_close(int fd);
+        void Set(); // SET key value → store it
+        void Get(); // GET key → retrieve it
+        void Del(); // DEL key → delete it
+        void Exists(); // EXISTS key → does it exist?
+        void Expire(); // EXPIRE key seconds → auto-delete after N seconds
+        void Ttl(); // TTL key → how many seconds left?
+        void Flush();
         Server();
         ~Server();
 };

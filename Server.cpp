@@ -49,16 +49,13 @@ void Server::run()
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
-                    // send_response(fd);
-                    for (size_t i = 0; i < clients[fd].cmd.size(); i++)
-                    {
-                        std::cout << clients[fd].cmd[i] << std::endl;
-                    }
-                    safe_close(fd);
+                    send_response(fd);
+                    continue;
                 }
                 else if ((events[i].events & EPOLLHUP) || (events[i].events & EPOLLERR))
                 {
                     safe_close(fd);
+                    continue;
                 }
             }
             catch (std::exception &e)
@@ -90,6 +87,15 @@ Server::Server()
     ev.events  = EPOLLIN;
     ev.data.fd = server_fd;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev);
+
+    cmd_func.insert(std::make_pair("GET", &Server::Get));
+    cmd_func.insert(std::make_pair("SET", &Server::Set));
+    cmd_func.insert(std::make_pair("DEL", &Server::Del));
+    cmd_func.insert(std::make_pair("EXISTS", &Server::Exists));
+    cmd_func.insert(std::make_pair("EXPIRE", &Server::Expire));
+    cmd_func.insert(std::make_pair("TTL", &Server::Ttl));
+    cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
+
 }
 
 Server::~Server()

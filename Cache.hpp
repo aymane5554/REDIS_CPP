@@ -9,7 +9,7 @@ class Cache
 {
     std::unordered_map <str, str> map;
     public:
-        void load(); // SET key value → store it
+        void load(); // load from disk
         void Set(std::pair<str, str> pair); // SET key value → store it
         void Get(str Key); // GET key → retrieve it
         void Del(str Key); // DEL key → delete it
