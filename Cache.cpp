@@ -17,17 +17,17 @@ void Cache::Set(std::vector<str> &cmd)
     }
     catch (std::exception &e)
     {
-        throw std::runtime_error("Value Not Set");
+        throw ERROR("-ERR Value Not Set\r\n");
     }
 }
 
 str Cache::Get(str Key)
 {
     if (map.find(Key) != map.end())
-        throw std::runtime_error(Key + " Does Not Exist");
+        throw ERROR("$-1\r\n");
     Val &val = map[Key];
     if (val.type == Val::STR)
-        throw std::runtime_error("Unvalid Type");
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     return *static_cast<str *>(val.ptr);
 }
 
@@ -35,7 +35,7 @@ void Cache::Del(str Key)
 {
     if (map.find(Key) != map.end())
     {
-        throw std::runtime_error(Key + " Does Not Exist");
+        throw ERROR(":0\r\n");
     }
     map.erase(Key);
 }
@@ -44,25 +44,27 @@ bool Cache::Exists(str Key)
 {
     if (map.find(Key) != map.end())
     {
-        return false;
+        throw ERROR(":0\r\n");
     }
     return true;
 }
 
 void Cache::Expire(str Key, long long seconds)
 {
+    time_t time = std::time(nullptr);
+
     if (map.find(Key) != map.end())
     {
-        throw std::runtime_error(Key + " Does Not Exist");
+        throw ERROR(":0\r\n");
     }
-    map[Key].seconds = seconds;
+    map[Key].seconds = time + seconds;
 }
 
 long long Cache::Ttl(str Key)
 {
     if (map.find(Key) != map.end())
     {
-        throw std::runtime_error(Key + " Does Not Exist");
+        throw ERROR(":-2\r\n");
     }
     return map[Key].seconds;
 }

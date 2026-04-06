@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <ctime>
 
 #include <iostream>
 #include <vector>
@@ -18,6 +19,23 @@
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
 
+class ERROR:std::exception
+{
+    private:
+        std::string msg;
+    public:
+        ERROR(str m)
+        {
+            msg = m;
+        }
+        ~ERROR() throw()
+        {}
+        virtual const char *what() const throw()
+        {
+            return msg.c_str();
+        }
+};
+
 struct Client
 {
     str res_buff;
@@ -26,11 +44,15 @@ struct Client
     std::vector <str> cmd;
     int lines;
     int bytes;
+    int send;
+    int sent;
 
     Client()
     {
         lines = 0;
         bytes = -1;
+        send = 0;
+        sent = 0;
     }
 };
 

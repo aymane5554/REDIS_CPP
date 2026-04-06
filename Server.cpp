@@ -58,6 +58,13 @@ void Server::run()
                     continue;
                 }
             }
+            catch (ERROR &e)
+            {
+                clients[fd].res_buff = e.what();
+                clients[fd].send = clients[fd].res_buff.length();
+                clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
+                continue ;
+            }
             catch (std::exception &e)
             {
                 std::cerr << "ERROR " << e.what() << std::endl;

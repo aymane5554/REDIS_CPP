@@ -2,18 +2,22 @@
 
 void Server::Del(int fd)
 {
+    Client &cl = clients[fd]; 
     if (clients[fd].cmd.size() != 2)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Del(clients[fd].cmd[1]);
+    cl.res_buff = ":1\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Get(int fd)
 {
     if (clients[fd].cmd.size() != 2)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Get(clients[fd].cmd[1]);
 }
@@ -22,43 +26,67 @@ void Server::Set(int fd)
 {
     if (clients[fd].cmd.size() != 3)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Set(clients[fd].cmd);
 }
 
 void Server::Exists(int fd)
 {
+    Client &cl = clients[fd];
     if (clients[fd].cmd.size() != 2)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Exists(clients[fd].cmd[1]);
+    cl.res_buff = ":1\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Expire(int fd)
 {
+    Client &cl = clients[fd];
+    long long seconds;
+
     if (clients[fd].cmd.size() != 3)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
-    cache.Expire(clients[fd].cmd[1], std::stol(clients[fd].cmd[2]));
+    try 
+    {
+        seconds = std::stol(clients[fd].cmd[2]);
+    }
+    catch (std::exception &e)
+    {
+        throw ERROR("-ERR value is not an integer or out of range\r\n");
+    }
+    cache.Expire(clients[fd].cmd[1], seconds);
+    cl.res_buff = ":1\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Ttl(int fd)
 {
+    Client &cl = clients[fd];
+    long long seconds;
     if (clients[fd].cmd.size() != 2)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
-    cache.Ttl(clients[fd].cmd[1]);
+    seconds = cache.Ttl(clients[fd].cmd[1]);
+    cl.res_buff = ":" + std::to_string(seconds);
+    cl.res_buff += "\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Flush(int fd)
 {
     if (clients[fd].cmd.size() != 1)
     {
-        throw std::runtime_error("unvalid command");
+        throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Flush();
 }

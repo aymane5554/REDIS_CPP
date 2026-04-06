@@ -2,8 +2,14 @@
 
 void Server::send_response(int fd)
 {
-    std::vector <str> &cmd = clients[fd].cmd;
+    Client &cl = clients[fd];
+    std::vector <str> &cmd = cl.cmd;
 
+    if (cl.send != cl.sent)
+    {
+        cl.send = cl.res_buff.length() - cl.sent;
+        cl.sent = send(fd, cl.res_buff.c_str() + cl.sent, cl.send, MSG_NOSIGNAL);
+    }
     if (cmd_func.find(cmd[0]) != cmd_func.end())
     {
         (this->*cmd_func[cmd[0]])(fd);
@@ -12,5 +18,6 @@ void Server::send_response(int fd)
     {
         throw std::runtime_error("Unsupported Command");
     }
-    safe_close(fd);
+    if (cl.send == cl.sent)
+        safe_close(fd);
 }
