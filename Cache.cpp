@@ -1,45 +1,75 @@
-#include "Cache.hpp"
+#include "Server.hpp"
 
 void Cache::load()
 {
 
 }
-void Cache::Set(std::pair<str, str> pair)
+
+void Cache::Set(std::vector<str> &cmd)
 {
-    (void)pair;
+    try
+    {
+        Val obj;
+        obj.type = Val::STR;
+        obj.seconds = -1;
+        obj.ptr = new str;
+        map.insert(std::make_pair(cmd[0], obj));
+    }
+    catch (std::exception &e)
+    {
+        throw std::runtime_error("Value Not Set");
+    }
 }
 
-void Cache::Get(str Key)
+str Cache::Get(str Key)
 {
-    (void)Key;
+    if (map.find(Key) != map.end())
+        throw std::runtime_error(Key + " Does Not Exist");
+    Val &val = map[Key];
+    if (val.type == Val::STR)
+        throw std::runtime_error("Unvalid Type");
+    return *static_cast<str *>(val.ptr);
 }
 
 void Cache::Del(str Key)
 {
-    (void)Key;
+    if (map.find(Key) != map.end())
+    {
+        throw std::runtime_error(Key + " Does Not Exist");
+    }
+    map.erase(Key);
 }
 
 bool Cache::Exists(str Key)
 {
-    (void)Key;
-    return false;
+    if (map.find(Key) != map.end())
+    {
+        return false;
+    }
+    return true;
 }
 
 void Cache::Expire(str Key, long long seconds)
 {
-    (void)Key;
-    (void)seconds;
+    if (map.find(Key) != map.end())
+    {
+        throw std::runtime_error(Key + " Does Not Exist");
+    }
+    map[Key].seconds = seconds;
 }
 
 long long Cache::Ttl(str Key)
 {
-    (void)Key;
-    return 0;
+    if (map.find(Key) != map.end())
+    {
+        throw std::runtime_error(Key + " Does Not Exist");
+    }
+    return map[Key].seconds;
 }
 
 void Cache::Flush()
 {
-
+    map.clear();
 }
 
 Cache::Cache()

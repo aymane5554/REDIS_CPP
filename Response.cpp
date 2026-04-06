@@ -6,7 +6,7 @@ void Server::send_response(int fd)
 
     if (cmd_func.find(cmd[0]) != cmd_func.end())
     {
-        (this->*cmd_func[cmd[0]])();
+        (this->*cmd_func[cmd[0]])(fd);
     }
     else
     {
