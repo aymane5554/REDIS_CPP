@@ -16,7 +16,7 @@ void Server::send_response(int fd)
     }
     else
     {
-        throw std::runtime_error("Unsupported Command");
+        throw std::runtime_error("-ERR Unsupported Command\r\n");
     }
     if (cl.send == cl.sent)
         safe_close(fd);
