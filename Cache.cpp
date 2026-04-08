@@ -7,13 +7,18 @@ void Cache::load()
 
 void Cache::Set(std::vector<str> &cmd)
 {
+    Val obj;
     try
     {
-        Val obj;
         obj.type = Val::STR;
-        obj.seconds = -1;
-        obj.ptr = new str;
-        map.insert(std::make_pair(cmd[0], obj));
+        obj.ptr = new str(cmd[2]);
+        if (map.find(cmd[1]) == map.end())
+            map.insert(std::make_pair(cmd[1], obj));
+        else
+        {
+            map.erase(cmd[1]);
+            map.insert(std::make_pair(cmd[1], obj));
+        }
     }
     catch (std::exception &e)
     {
@@ -23,17 +28,54 @@ void Cache::Set(std::vector<str> &cmd)
 
 str Cache::Get(str Key)
 {
-    if (map.find(Key) != map.end())
+    if (map.find(Key) == map.end())
         throw ERROR("$-1\r\n");
     Val &val = map[Key];
-    if (val.type == Val::STR)
+    if (val.type != Val::STR)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     return *static_cast<str *>(val.ptr);
 }
 
+void Val::delete_Val_ptr()
+{
+    if (ptr == NULL)
+        return ;
+    if (type == Val::STR)
+    {
+        delete static_cast<str *>(ptr);
+    }
+    else if (type == Val::LIST)
+    {
+        delete static_cast<std::list<str> *>(ptr);
+    }
+}
+
+
+void Val::new_Val_ptr(const Val &obj)
+{
+    if (obj.type == Val::STR)
+    {
+        this->ptr = new str;
+    }
+    else if (obj.type == Val::LIST)
+    {
+        this->ptr = new std::list<str>;
+    }
+}
+
+void Val::copy_Val_ptr(const Val &obj)
+{
+    if (obj.type == Val::STR)
+    {
+        *static_cast<str *>(this->ptr) = *static_cast<str *>(obj.ptr);
+    }
+    else if (obj.type == Val::LIST)
+        *static_cast<std::list<str> *>(this->ptr) = *static_cast<std::list<str> *>(obj.ptr); 
+}
+
 void Cache::Del(str Key)
 {
-    if (map.find(Key) != map.end())
+    if (map.find(Key) == map.end())
     {
         throw ERROR(":0\r\n");
     }
@@ -42,7 +84,7 @@ void Cache::Del(str Key)
 
 bool Cache::Exists(str Key)
 {
-    if (map.find(Key) != map.end())
+    if (map.find(Key) == map.end())
     {
         throw ERROR(":0\r\n");
     }
@@ -53,7 +95,7 @@ void Cache::Expire(str Key, long long seconds)
 {
     time_t time = std::time(nullptr);
 
-    if (map.find(Key) != map.end())
+    if (map.find(Key) == map.end())
     {
         throw ERROR(":0\r\n");
     }
@@ -62,7 +104,7 @@ void Cache::Expire(str Key, long long seconds)
 
 long long Cache::Ttl(str Key)
 {
-    if (map.find(Key) != map.end())
+    if (map.find(Key) == map.end())
     {
         throw ERROR(":-2\r\n");
     }

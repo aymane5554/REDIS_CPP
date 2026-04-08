@@ -8,15 +8,22 @@ int set_nonblocking(int fd) {
 
 void Server::safe_close(int fd)
 {
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, clients[fd].event);
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     clients.erase(fd);
+}
+
+void sigint_handler(int sig)
+{
+    (void)sig;
+    sigint = 1;
 }
 
 void Server::run()
 {
     struct epoll_event events[MAX_EVENTS];
-    while (1)
+    signal(SIGINT, sigint_handler);
+    while (!sigint)
     {
         int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
         for (int i = 0; i < n; i++)
@@ -39,7 +46,6 @@ void Server::run()
                     client_event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_fd, &client_event);
                     Client obj;
-                    obj.event = &client_event;
                     clients.insert(std::make_pair(fd, obj));
                 }
                 else if (events[i].events & EPOLLIN)
@@ -52,7 +58,7 @@ void Server::run()
                     send_response(fd);
                     continue;
                 }
-                else if ((events[i].events & EPOLLHUP) || (events[i].events & EPOLLERR))
+                else if (events[i].events & (EPOLLHUP | EPOLLERR))
                 {
                     safe_close(fd);
                     continue;
@@ -102,7 +108,6 @@ Server::Server()
     cmd_func.insert(std::make_pair("EXPIRE", &Server::Expire));
     cmd_func.insert(std::make_pair("TTL", &Server::Ttl));
     cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
-
 }
 
 Server::~Server()

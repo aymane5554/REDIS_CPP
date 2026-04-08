@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <exception>
 #include <cstring>
 
@@ -18,6 +19,8 @@
 #define PORT        8080
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
+
+extern int sigint;
 
 class ERROR:std::exception
 {
@@ -40,7 +43,6 @@ struct Client
 {
     str res_buff;
     str req_buff;
-    epoll_event *event;
     std::vector <str> cmd;
     int lines;
     int bytes;

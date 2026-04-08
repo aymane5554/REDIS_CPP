@@ -16,6 +16,34 @@ class Val
         Val::t_type type;
         long long seconds;
         void *ptr;
+
+        void delete_Val_ptr();
+        void new_Val_ptr(const Val &obj);
+        void copy_Val_ptr(const Val &obj);
+        Val()
+        {
+            ptr = NULL;
+            seconds = -1;
+        }
+        Val(const Val &obj)
+        {
+            new_Val_ptr(obj);
+            copy_Val_ptr(obj);
+            this->seconds = obj.seconds;
+            this->type = obj.type;
+        }
+        Val &operator=(const Val &obj)
+        {
+            new_Val_ptr(obj);
+            copy_Val_ptr(obj);
+            this->seconds = obj.seconds;
+            this->type = obj.type;
+            return *this;
+        }
+        ~Val()
+        {
+            delete_Val_ptr();
+        }
 };
 
 class Cache

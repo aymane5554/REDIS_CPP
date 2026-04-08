@@ -15,20 +15,28 @@ void Server::Del(int fd)
 
 void Server::Get(int fd)
 {
+    Client &cl = clients[fd];
     if (clients[fd].cmd.size() != 2)
     {
         throw ERROR("-ERR unvalid number of argument\r\n");
     }
-    cache.Get(clients[fd].cmd[1]);
+    str val = cache.Get(clients[fd].cmd[1]);
+    cl.res_buff = val + "\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Set(int fd)
 {
+    Client &cl = clients[fd];
     if (clients[fd].cmd.size() != 3)
     {
         throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Set(clients[fd].cmd);
+    cl.res_buff = "+OK\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
 
 void Server::Exists(int fd)
