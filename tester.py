@@ -23,7 +23,7 @@ print(f"TEST GET {data.decode('utf-8')}")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
-    message = b"*3\r\n$6\r\nEXPIRE\r\n$3\r\nkey\r\n$2\r\n60\r\n"
+    message = b"*3\r\n$6\r\nEXPIRE\r\n$3\r\nkey\r\n$1\r\n5\r\n"
     s.send(message)
     data = s.recv(1024)
     s.close()

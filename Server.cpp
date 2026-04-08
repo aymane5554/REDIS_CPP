@@ -26,6 +26,9 @@ void sigint_handler(int sig)
 
 void Server::run()
 {
+    std::thread ttl(&Server::ttl_thread, this);
+
+    ttl.detach();
     struct epoll_event events[MAX_EVENTS];
     signal(SIGINT, sigint_handler);
     while (!sigint)

@@ -7,12 +7,15 @@
 #include <unistd.h>
 #include <signal.h>
 #include <ctime>
+#include <cstring>
 
 #include <iostream>
 #include <vector>
 #include <list>
 #include <exception>
-#include <cstring>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "Cache.hpp"
 
@@ -20,7 +23,7 @@
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
 
-extern int sigint;
+extern std::atomic<int> sigint;
 
 class ERROR:std::exception
 {
@@ -63,6 +66,7 @@ class Server
     std::unordered_map <int, Client> clients;
     std::unordered_map <str, void(Server::*)(int)> cmd_func;
     Cache cache;
+    std::mutex mtx;
     int server_fd;
     int epoll_fd;
     public:
@@ -77,6 +81,7 @@ class Server
         void Expire(int fd); // EXPIRE key seconds → auto-delete after N seconds
         void Ttl(int fd); // TTL key → how many seconds left?
         void Flush(int fd);
+        void ttl_thread();
         Server();
         ~Server();
 };
