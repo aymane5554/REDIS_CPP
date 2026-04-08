@@ -2,7 +2,6 @@
 
 int sigint = 0;
 
-
 int main()
 {
     Server server;

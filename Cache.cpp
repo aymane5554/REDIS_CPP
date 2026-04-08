@@ -5,35 +5,32 @@ void Cache::load()
 
 }
 
-void Cache::Set(std::vector<str> &cmd)
+Val::Val()
 {
-    Val obj;
-    try
-    {
-        obj.type = Val::STR;
-        obj.ptr = new str(cmd[2]);
-        if (map.find(cmd[1]) == map.end())
-            map.insert(std::make_pair(cmd[1], obj));
-        else
-        {
-            map.erase(cmd[1]);
-            map.insert(std::make_pair(cmd[1], obj));
-        }
-    }
-    catch (std::exception &e)
-    {
-        throw ERROR("-ERR Value Not Set\r\n");
-    }
+    ptr = NULL;
+    seconds = -1;
 }
 
-str Cache::Get(str Key)
+Val::Val(const Val &obj)
 {
-    if (map.find(Key) == map.end())
-        throw ERROR("$-1\r\n");
-    Val &val = map[Key];
-    if (val.type != Val::STR)
-        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    return *static_cast<str *>(val.ptr);
+    new_Val_ptr(obj);
+    copy_Val_ptr(obj);
+    this->seconds = obj.seconds;
+    this->type = obj.type;
+}
+
+Val &Val::operator=(const Val &obj)
+{
+    new_Val_ptr(obj);
+    copy_Val_ptr(obj);
+    this->seconds = obj.seconds;
+    this->type = obj.type;
+    return *this;
+}
+
+Val::~Val()
+{
+    delete_Val_ptr();
 }
 
 void Val::delete_Val_ptr()
@@ -71,6 +68,37 @@ void Val::copy_Val_ptr(const Val &obj)
     }
     else if (obj.type == Val::LIST)
         *static_cast<std::list<str> *>(this->ptr) = *static_cast<std::list<str> *>(obj.ptr); 
+}
+
+void Cache::Set(std::vector<str> &cmd)
+{
+    Val obj;
+    try
+    {
+        obj.type = Val::STR;
+        obj.ptr = new str(cmd[2]);
+        if (map.find(cmd[1]) == map.end())
+            map.insert(std::make_pair(cmd[1], obj));
+        else
+        {
+            map.erase(cmd[1]);
+            map.insert(std::make_pair(cmd[1], obj));
+        }
+    }
+    catch (std::exception &e)
+    {
+        throw ERROR("-ERR Value Not Set\r\n");
+    }
+}
+
+str Cache::Get(str Key)
+{
+    if (map.find(Key) == map.end())
+        throw ERROR("$-1\r\n");
+    Val &val = map[Key];
+    if (val.type != Val::STR)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+    return *static_cast<str *>(val.ptr);
 }
 
 void Cache::Del(str Key)

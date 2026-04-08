@@ -1,19 +1,22 @@
 C++FLAGS=-Wall -Wextra -Werror
 SRCS= Cache.cpp Server.cpp main.cpp Response.cpp Request.cpp Commands.cpp
 INCS= Cache.hpp Server.hpp
-OBJS= $(SRCS:%.cpp=%.o)
+OBJS= $(SRCS:%.cpp=obj/%.o)
 NAME= redihh
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): obj $(OBJS)
 	c++ $(C++FLAGS) $(OBJS) -o $@
 
-%.o: %.cpp $(INCS)
+obj:
+	mkdir obj
+
+obj/%.o: %.cpp $(INCS)
 	c++ $(C++FLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	rm -rf $(OBJS) obj
 
 fclean: clean
 	rm -f $(NAME)

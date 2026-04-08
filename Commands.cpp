@@ -92,9 +92,13 @@ void Server::Ttl(int fd)
 
 void Server::Flush(int fd)
 {
+    Client &cl = clients[fd];
     if (clients[fd].cmd.size() != 1)
     {
         throw ERROR("-ERR unvalid number of argument\r\n");
     }
     cache.Flush();
+    cl.res_buff = "+OK\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }

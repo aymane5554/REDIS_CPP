@@ -9,6 +9,9 @@ void Server::send_response(int fd)
     {
         cl.send = cl.res_buff.length() - cl.sent;
         cl.sent = send(fd, cl.res_buff.c_str() + cl.sent, cl.send, MSG_NOSIGNAL);
+        if (cl.send == cl.sent)
+            safe_close(fd);
+        return ;
     }
     if (cmd_func.find(cmd[0]) != cmd_func.end())
     {
@@ -19,5 +22,7 @@ void Server::send_response(int fd)
         throw ERROR("-ERR Unsupported Command\r\n");
     }
     if (cl.send == cl.sent)
+    {
         safe_close(fd);
+    }
 }

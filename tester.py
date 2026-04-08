@@ -11,7 +11,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.send(message)
     data = s.recv(1024)
     s.close()
-print(f"Received from server:{data.decode('utf-8')}")
+print(f"TEST SET {data.decode('utf-8')}")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
@@ -19,4 +19,44 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.send(message)
     data = s.recv(1024)
     s.close()
-print(f"Received from server:{data.decode('utf-8')}")
+print(f"TEST GET {data.decode('utf-8')}")
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    message = b"*3\r\n$6\r\nEXPIRE\r\n$3\r\nkey\r\n$2\r\n60\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    s.close()
+print(f"TEST EXPIRE {data.decode('utf-8')}")
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    message = b"*2\r\n$3\r\nTTL\r\n$3\r\nkey\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    s.close()
+print(f"TEST TTL {data.decode('utf-8')}")
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    message = b"*2\r\n$3\r\nDEL\r\n$3\r\nkey\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    s.close()
+print(f"TEST DEL {data.decode('utf-8')}")
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    message = b"*2\r\n$6\r\nEXISTS\r\n$3\r\nkey\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    s.close()
+print(f"TEST EXISTS {data.decode('utf-8')}")
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    message = b"*1\r\n$5\r\nFLUSH\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    s.close()
+print(f"TEST FLUSH {data.decode('utf-8')}")

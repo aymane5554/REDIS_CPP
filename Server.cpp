@@ -11,6 +11,11 @@ void Server::safe_close(int fd)
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     clients.erase(fd);
+    /*i will keep this here cause i want to add keep-alive later
+    clients[fd].res_buff.clear();
+    clients[fd].cmd.clear();
+    clients[fd].clear()
+    */
 }
 
 void sigint_handler(int sig)
@@ -30,7 +35,7 @@ void Server::run()
         {
             int fd = events[i].data.fd;
             try
-            {            
+            {
                 if (fd == server_fd)
                 {
                     struct sockaddr_in client_addr;
@@ -69,6 +74,8 @@ void Server::run()
                 clients[fd].res_buff = e.what();
                 clients[fd].send = clients[fd].res_buff.length();
                 clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
+                if (clients[fd].send == clients[fd].sent)
+                    safe_close(fd);
                 continue ;
             }
             catch (std::exception &e)
