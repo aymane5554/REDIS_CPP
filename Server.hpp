@@ -16,14 +16,16 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 
 #include "Cache.hpp"
 
 #define PORT        8080
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
+#define TTL_SLEEP_TIME 60
 
-extern std::atomic<int> sigint;
+extern std::atomic<bool> sigint;
 
 class ERROR:std::exception
 {

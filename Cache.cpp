@@ -70,6 +70,21 @@ void Val::copy_Val_ptr(const Val &obj)
         *static_cast<std::list<str> *>(this->ptr) = *static_cast<std::list<str> *>(obj.ptr); 
 }
 
+void Cache::check_expired_values()
+{
+    time_t ti = std::time(NULL);
+    for (auto it = map.begin(); it != map.end(); )
+    {
+        std::cout << "TTL" << std::endl;
+        if (it->second.seconds < ti && it->second.seconds > -1)
+        {
+            it = map.erase(it);
+            continue;
+        }
+        ++it;
+    }
+}
+
 void Cache::Set(std::vector<str> &cmd)
 {
     Val obj;

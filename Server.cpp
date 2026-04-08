@@ -24,11 +24,22 @@ void sigint_handler(int sig)
     sigint = 1;
 }
 
+void Server::ttl_thread()
+{
+    std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
+    while (!sigint)
+    {
+        sleep(TTL_SLEEP_TIME);
+        lock.lock();
+        cache.check_expired_values();
+        lock.unlock();
+    }
+}
+
 void Server::run()
 {
     std::thread ttl(&Server::ttl_thread, this);
 
-    ttl.detach();
     struct epoll_event events[MAX_EVENTS];
     signal(SIGINT, sigint_handler);
     while (!sigint)
@@ -54,7 +65,7 @@ void Server::run()
                     client_event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_fd, &client_event);
                     Client obj;
-                    clients.insert(std::make_pair(fd, obj));
+                    clients.insert(std::make_pair(conn_fd, obj));
                 }
                 else if (events[i].events & EPOLLIN)
                 {
@@ -88,6 +99,7 @@ void Server::run()
             }
         }
     }
+    ttl.detach();
 };
 
 Server::Server()
