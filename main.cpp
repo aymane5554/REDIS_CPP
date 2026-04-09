@@ -6,6 +6,7 @@ int main()
 {
     Server server;
 
+    signal(SIGPIPE, SIG_IGN);
     server.run();
     return 0;
 }

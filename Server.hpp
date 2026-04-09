@@ -16,7 +16,6 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
-#include <condition_variable>
 
 #include "Cache.hpp"
 
@@ -60,6 +59,15 @@ struct Client
         bytes = -1;
         send = 0;
         sent = 0;
+    }
+    void clear()
+    {
+        lines = 0;
+        bytes = -1;
+        send = 0;
+        sent = 0;
+        res_buff.clear();
+        cmd.clear();
     }
 };
 

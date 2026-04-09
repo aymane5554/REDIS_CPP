@@ -63,7 +63,6 @@ void make_client_writable(int fd,  int epoll_fd)
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &event);
 }
 
-
 void Server::parse_request(int fd)
 {
     char buff[BUF_SIZE];

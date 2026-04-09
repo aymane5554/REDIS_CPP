@@ -11,11 +11,6 @@ void Server::safe_close(int fd)
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     clients.erase(fd);
-    /*i will keep this here cause i want to add keep-alive later
-    clients[fd].res_buff.clear();
-    clients[fd].cmd.clear();
-    clients[fd].clear()
-    */
 }
 
 void sigint_handler(int sig)
@@ -95,7 +90,8 @@ void Server::run()
             catch (std::exception &e)
             {
                 std::cerr << "ERROR " << e.what() << std::endl;
-                safe_close(fd);
+                if (clients.find(fd) != clients.end())
+                    safe_close(fd);
             }
         }
     }
