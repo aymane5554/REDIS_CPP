@@ -50,15 +50,16 @@ def Flush():
 
 def main():
     s.connect((HOST, PORT))
+    # Get(f"key{1}")
+
     for i in range(10):
         Set(f"key{i}", f"value{i}")
     for i in range(10):
         Get(f"key{i}")
     for i in range(10):
-        Expire(f"key{i}", 5)
+        Expire(f"key{i}", 120)
     for i in range(10):
         TTL(f"key{i}")
-    time.sleep(6)
     for i in range(10):
         Exists(f"key{i}")
     s.close()

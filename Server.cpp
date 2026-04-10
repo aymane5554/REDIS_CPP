@@ -37,6 +37,7 @@ void Server::run()
 
     struct epoll_event events[MAX_EVENTS];
     signal(SIGINT, sigint_handler);
+    cache.Deserialize();
     while (!sigint)
     {
         int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
@@ -96,6 +97,7 @@ void Server::run()
         }
     }
     ttl.detach();
+    this->cache.Serialize();
 };
 
 Server::Server()

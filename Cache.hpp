@@ -11,7 +11,8 @@ class Val
         typedef enum e_type
         {
             LIST,
-            STR
+            STR,
+            NONE
         } t_type;
         Val::t_type type;
         long long seconds;
@@ -39,6 +40,8 @@ class Cache
         long long Ttl(str Key); // TTL key → how many seconds left?
         void Flush(); // FLUSH → wipe everything
         void check_expired_values();
+        void Serialize();
+        void Deserialize();
         Cache();
         ~Cache();
 };

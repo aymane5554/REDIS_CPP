@@ -9,6 +9,7 @@ Val::Val()
 {
     ptr = NULL;
     seconds = -1;
+    type = NONE;
 }
 
 Val::Val(const Val &obj)
@@ -35,6 +36,7 @@ Val::~Val()
 
 void Val::delete_Val_ptr()
 {
+    std::cout << "Val Destructor" << std::endl;
     if (ptr == NULL)
         return ;
     if (type == Val::STR)
@@ -45,6 +47,7 @@ void Val::delete_Val_ptr()
     {
         delete static_cast<std::list<str> *>(ptr);
     }
+    ptr = NULL;
 }
 
 
@@ -75,7 +78,6 @@ void Cache::check_expired_values()
     time_t ti = std::time(NULL);
     for (auto it = map.begin(); it != map.end(); )
     {
-        std::cout << "TTL" << std::endl;
         if (it->second.seconds < ti && it->second.seconds > -1)
         {
             it = map.erase(it);

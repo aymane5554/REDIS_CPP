@@ -15,6 +15,7 @@
     [per key]
         [1 byte]   has_ttl flag      0 or 1
         [8 bytes]  expires_at        only if has_ttl == 1
+        [1 byte]   type
         [4 bytes]  key length
         [N bytes]  key
         [4 bytes]  value length
