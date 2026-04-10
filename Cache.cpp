@@ -36,7 +36,6 @@ Val::~Val()
 
 void Val::delete_Val_ptr()
 {
-    std::cout << "Val Destructor" << std::endl;
     if (ptr == NULL)
         return ;
     if (type == Val::STR)
