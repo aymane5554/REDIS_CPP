@@ -4,43 +4,64 @@ import time
 
 HOST = '127.0.0.1'
 PORT = 8080 
-
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
 
-message = b"*3\r\n$3\r\nSET\r\n$3\r\nkey\r\n$3\r\nbbb\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST SET {data.decode('utf-8')}")
+def Set(key, value):
+    message = f"*3\r\n$3\r\nSET\r\n${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"SET {key} {value} {data.decode('utf-8')}")
 
-message = b"*2\r\n$3\r\nGET\r\n$3\r\nkey\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST GET {data.decode('utf-8')}")
+def Get(key):
+    message = f"*2\r\n$3\r\nGET\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"GET {key} {data.decode('utf-8')}")
 
-message = b"*3\r\n$6\r\nEXPIRE\r\n$3\r\nkey\r\n$1\r\n5\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST EXPIRE {data.decode('utf-8')}")
+def Expire(key, seconds):
+    message = f"*3\r\n$6\r\nEXPIRE\r\n${len(key)}\r\n{key}\r\n${len(str(seconds))}\r\n{seconds}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"EXPIRE {key} {seconds} {data.decode('utf-8')}")
 
-message = b"*2\r\n$3\r\nTTL\r\n$3\r\nkey\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST TTL {data.decode('utf-8')}")
+def TTL(key):
+    message = f"*2\r\n$3\r\nTTL\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"TTL {key} {data.decode('utf-8')}")
 
-message = b"*2\r\n$3\r\nDEL\r\n$3\r\nkey\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST DEL {data.decode('utf-8')}")
+def Del(key):
+    message = f"*2\r\n$3\r\nDEL\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"DEL {key} {data.decode('utf-8')}")
 
-message = b"*2\r\n$6\r\nEXISTS\r\n$3\r\nkey\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST EXISTS {data.decode('utf-8')}")
+def Exists(key):
+    message = f"*2\r\n$6\r\nEXISTS\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"EXISTS {key} {data.decode('utf-8')}")
 
-message = b"*1\r\n$5\r\nFLUSH\r\n"
-s.send(message)
-data = s.recv(1024)
-print(f"TEST FLUSH {data.decode('utf-8')}")
+def Flush():
+    message = b"*1\r\n$5\r\nFLUSH\r\n"
+    s.send(message)
+    data = s.recv(1024)
+    print(f"FLUSH {data.decode('utf-8')}")
 
-s.close()
+def main():
+    s.connect((HOST, PORT))
+    for i in range(10):
+        Set(f"key{i}", f"value{i}")
+    for i in range(10):
+        Get(f"key{i}")
+    for i in range(10):
+        Expire(f"key{i}", 5)
+    for i in range(10):
+        TTL(f"key{i}")
+    time.sleep(6)
+    for i in range(10):
+        Exists(f"key{i}")
+    s.close()
+
+if __name__ == "__main__":
+    main()
