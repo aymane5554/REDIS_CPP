@@ -47,11 +47,11 @@ void Cache::Deserialize()
             read(fd, value, len);
             value[len] = '\0';
             obj.ptr = new str(value);
+            map.insert(std::make_pair(key, obj));
+            obj.delete_Val_ptr();
+            free(value);
         }
-        map.insert(std::make_pair(key, obj));
-        obj.delete_Val_ptr();
         free(key);
-        free(value);
     }
     close(fd);
 }
@@ -88,10 +88,6 @@ void Cache::Serialize()
             len = s_val->length();
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
-        }
-        else if (i->second.type == Val::LIST)
-        {
-            // TODO
         }
     }
     close(fd);

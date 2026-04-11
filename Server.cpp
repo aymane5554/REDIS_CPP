@@ -33,14 +33,16 @@ void Server::ttl_thread()
 
 void Server::run()
 {
-    std::thread ttl(&Server::ttl_thread, this);
-
     struct epoll_event events[MAX_EVENTS];
+    std::thread ttl(&Server::ttl_thread, this);
+    std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
+
+    ttl.detach();
     signal(SIGINT, sigint_handler);
     cache.Deserialize();
     while (!sigint)
     {
-        int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
+        int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 10000);
         for (int i = 0; i < n; i++)
         {
             int fd = events[i].data.fd;
@@ -95,9 +97,24 @@ void Server::run()
                     safe_close(fd);
             }
         }
+        if (std::time(NULL) - last_serialization >= SERIALIZE_TIME)
+        {
+            pid_t pid = fork();
+            if (!pid)
+            {
+                this->cache.Serialize();
+                exit(0);
+            }
+            else if (pid == -1)
+            {
+                perror("fork");
+            }
+            last_serialization = std::time(NULL);
+        }
     }
-    ttl.detach();
+    lock.lock();
     this->cache.Serialize();
+    lock.unlock();
 };
 
 Server::Server()
@@ -128,6 +145,8 @@ Server::Server()
     cmd_func.insert(std::make_pair("EXPIRE", &Server::Expire));
     cmd_func.insert(std::make_pair("TTL", &Server::Ttl));
     cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
+
+    last_serialization = 0;
 }
 
 Server::~Server()

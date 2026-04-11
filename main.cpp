@@ -2,12 +2,17 @@
 
 /*
     Plan:
-    1. HashMap + GET/SET/DEL          → works in memory, no persistence yet
-    2. TTL + expiry                   → background cleanup thread
-    3. Serialization and Deserialization of the hashmap
-    4. LRU eviction                   → cap memory usage
+    1. HashMap + GET/SET/DEL          DONE
+    2. TTL + expiry                   DONE
+    3. Serialization and Deserialization DONE
+    4. LRU eviction                   → cap memory usage IN PROGRESS
+        1. limit memory by size example 64mb
+        2. when the limit is reached call LRU
+        3. keep track of keys usage
     5. Write-Ahead Log                → survive crashes
     6. Snapshotting                   → keep the WAL from growing forever
+    7. ADD LIST type
+    8. add checksum to file format
 
     costum.db file format
     [4 bytes]  magic number          0FTREDIS
@@ -20,7 +25,7 @@
         [N bytes]  key
         [4 bytes]  value length
         [N bytes]  value
-    [8 bytes]  CRC64 checksum
+    [8 bytes]  CRC64 checksum <- TODO
 */
 
 std::atomic<bool> sigint = 0;

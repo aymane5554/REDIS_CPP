@@ -23,6 +23,7 @@
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
 #define TTL_SLEEP_TIME 60
+#define SERIALIZE_TIME 30
 
 extern std::atomic<bool> sigint;
 
@@ -79,6 +80,7 @@ class Server
     std::mutex mtx;
     int server_fd;
     int epoll_fd;
+    long long last_serialization;
     public:
         void run();
         void parse_request(int fd);
