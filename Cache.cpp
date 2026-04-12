@@ -162,10 +162,8 @@ void Cache::Flush()
 
 Cache::Cache()
 {
-    
 }
 
 Cache::~Cache()
 {
-
 }

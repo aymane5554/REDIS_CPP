@@ -9,10 +9,12 @@ void Cache::Deserialize()
     int keys_num = 0;
     int fd = 0;
     int len = 0;
+    int klen = 0;
     u_char is_ttl = 0;
     Val obj;
     char *key = NULL;
     char *value = NULL;
+    std::pair<str, Val> pair;
 
     std::cout << "Deserialize" << std::endl;
     if (access("costum.db", F_OK))
@@ -36,22 +38,24 @@ void Cache::Deserialize()
         if (is_ttl)
             read(fd, &obj.seconds, 8);
         read(fd, &obj.type, 1);
-        read(fd, &len, 4);
-        key = (char *)malloc((len + 1) * sizeof(char));
-        read(fd, key, len);
-        key[len] = '\0';
+        read(fd, &klen, 4);
+        key = new char[klen + 1];
+        read(fd, key, klen);
+        key[klen] = '\0';
         if (obj.type == Val::STR)
         {
             read(fd, &len, 4);  
-            value = (char *)malloc((len + 1) * sizeof(char));
+            value = new char[len + 1];
             read(fd, value, len);
             value[len] = '\0';
             obj.ptr = new str(value);
-            map.insert(std::make_pair(key, obj));
+            pair.first = key;
+            pair.second = obj;
+            map.insert(pair);
             obj.delete_Val_ptr();
-            free(value);
+            delete[] value;
         }
-        free(key);
+        delete[] key;
     }
     close(fd);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/wait.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netinet/in.h>
@@ -24,6 +26,7 @@
 #define BUF_SIZE    4096
 #define TTL_SLEEP_TIME 60
 #define SERIALIZE_TIME 30
+#define MEMORY_LIMIT_MB 16
 
 extern std::atomic<bool> sigint;
 

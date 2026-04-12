@@ -36,13 +36,14 @@ void Server::run()
     struct epoll_event events[MAX_EVENTS];
     std::thread ttl(&Server::ttl_thread, this);
     std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
+    pid_t serializer_pid = -1;
 
     ttl.detach();
     signal(SIGINT, sigint_handler);
     cache.Deserialize();
     while (!sigint)
     {
-        int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 10000);
+        int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
         for (int i = 0; i < n; i++)
         {
             int fd = events[i].data.fd;
@@ -99,19 +100,23 @@ void Server::run()
         }
         if (std::time(NULL) - last_serialization >= SERIALIZE_TIME)
         {
-            pid_t pid = fork();
-            if (!pid)
+            if (serializer_pid != -1)
+                waitpid(serializer_pid, NULL, 0);
+            serializer_pid = fork();
+            if (!serializer_pid)
             {
                 this->cache.Serialize();
                 exit(0);
             }
-            else if (pid == -1)
+            else if (serializer_pid == -1)
             {
-                perror("fork");
+                perror("fork failed in Serialization");
             }
             last_serialization = std::time(NULL);
         }
     }
+    if (serializer_pid != -1)
+        waitpid(serializer_pid, NULL, 0);
     lock.lock();
     this->cache.Serialize();
     lock.unlock();
@@ -146,7 +151,7 @@ Server::Server()
     cmd_func.insert(std::make_pair("TTL", &Server::Ttl));
     cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
 
-    last_serialization = 0;
+    last_serialization = std::time(NULL);
 }
 
 Server::~Server()

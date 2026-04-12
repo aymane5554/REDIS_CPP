@@ -6,8 +6,8 @@
     2. TTL + expiry                   DONE
     3. Serialization and Deserialization DONE
     4. LRU eviction                   → cap memory usage IN PROGRESS
-        1. limit memory by size example 64mb
-        2. when the limit is reached call LRU
+        1. limit memory by size example 16mb
+        2. when the limit is reached call LRU <-------------------------------- I am here
         3. keep track of keys usage
     5. Write-Ahead Log                → survive crashes
     6. Snapshotting                   → keep the WAL from growing forever
@@ -30,11 +30,24 @@
 
 std::atomic<bool> sigint = 0;
 
+static bool set_as_limit_bytes(rlim_t bytes)
+{
+    rlimit rl;
+
+    rl.rlim_cur = bytes;
+    rl.rlim_max = bytes;
+    if (setrlimit(RLIMIT_AS, &rl) != 0) {
+        return false;
+    }
+    return true;
+}
+
 int main()
 {
     Server server;
 
     signal(SIGPIPE, SIG_IGN);
+    set_as_limit_bytes(MEMORY_LIMIT_MB * 1024 * 1024);
     server.run();
     return 0;
 }

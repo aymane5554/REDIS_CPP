@@ -11,6 +11,7 @@ def Set(key, value):
     s.send(message)
     data = s.recv(1024)
     print(f"SET {key} {value} {data.decode('utf-8')}")
+    return data
 
 def Get(key):
     message = f"*2\r\n$3\r\nGET\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
@@ -50,18 +51,12 @@ def Flush():
 
 def main():
     s.connect((HOST, PORT))
-    # Get(f"key{1}")
-
-    for i in range(10):
-        Set(f"key{i}", f"value{i}")
-    for i in range(10):
-        Get(f"key{i}")
-    for i in range(10):
-        Expire(f"key{i}", 120)
-    for i in range(10):
-        TTL(f"key{i}")
-    for i in range(10):
-        Exists(f"key{i}")
+    for i in range(1000000000):
+        data = Set(f"key{i}", f"value{i}")
+        if data.decode() == "-ERR Value Not Set\r\n":
+            s.close()
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((HOST, PORT))
     s.close()
 
 if __name__ == "__main__":

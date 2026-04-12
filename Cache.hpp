@@ -14,9 +14,9 @@ class Val
             STR,
             NONE
         } t_type;
-        Val::t_type type;
         long long seconds;
         void *ptr;
+        Val::t_type type;
 
         void delete_Val_ptr();
         void new_Val_ptr(const Val &obj);
