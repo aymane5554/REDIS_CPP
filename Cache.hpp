@@ -31,7 +31,6 @@ class Cache
 {
     std::unordered_map <str, Val> map;
     public:
-        void load(); // load from disk
         void Set(std::vector<str> &cmd); // SET key value → store it
         str Get(str Key); // GET key → retrieve it
         void Del(str Key); // DEL key → delete it
@@ -42,6 +41,7 @@ class Cache
         void check_expired_values();
         void Serialize();
         void Deserialize();
+        void LRU();
         Cache();
         ~Cache();
 };

@@ -1,5 +1,5 @@
 C++FLAGS=-Wall -Wextra -Werror
-SRCS= Cache.cpp Server.cpp main.cpp Response.cpp Request.cpp Commands.cpp Serialize.cpp
+SRCS= Cache.cpp Server.cpp main.cpp Response.cpp Request.cpp Commands.cpp Serialize.cpp LRU.cpp
 INCS= Cache.hpp Server.hpp
 OBJS= $(SRCS:%.cpp=obj/%.o)
 NAME= redihh

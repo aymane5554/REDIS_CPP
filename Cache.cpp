@@ -1,10 +1,5 @@
 #include "Server.hpp"
 
-void Cache::load()
-{
-
-}
-
 Val::Val()
 {
     ptr = NULL;

@@ -9,10 +9,11 @@
         1. limit memory by size example 16mb
         2. when the limit is reached call LRU <-------------------------------- I am here
         3. keep track of keys usage
-    5. Write-Ahead Log                → survive crashes
-    6. Snapshotting                   → keep the WAL from growing forever
-    7. ADD LIST type
-    8. add checksum to file format
+    5. ttl for clients
+    6. Write-Ahead Log                → survive crashes
+    7. Snapshotting                   → keep the WAL from growing forever
+    8. ADD LIST type
+    9. add checksum to file format
 
     costum.db file format
     [4 bytes]  magic number          0FTREDIS

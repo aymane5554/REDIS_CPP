@@ -2,6 +2,19 @@
 
 #define MAGIC_NUMBER "\x00\x46\x54\x52\x45\x44\x49\x53"
 
+bool inserted(std::unordered_map<str, Val> &map, std::pair<str, Val> &pair)
+{
+    try
+    {
+        map.insert(pair);
+    }
+    catch (std::exception &e)
+    {
+        return false;
+    }
+    return true;
+}
+
 void Cache::Deserialize()
 {
     char buff[8];
@@ -18,7 +31,9 @@ void Cache::Deserialize()
 
     std::cout << "Deserialize" << std::endl;
     if (access("costum.db", F_OK))
+    {
         return;
+    }
     fd = open("costum.db", O_RDONLY);
     if (fd < 0)
     {
@@ -44,14 +59,27 @@ void Cache::Deserialize()
         key[klen] = '\0';
         if (obj.type == Val::STR)
         {
-            read(fd, &len, 4);  
-            value = new char[len + 1];
+            read(fd, &len, 4);
+            value = new (std::nothrow) char[len + 1];
+            while (value == NULL)
+            {
+                LRU();
+                value = new (std::nothrow) char[len + 1];
+            }
             read(fd, value, len);
             value[len] = '\0';
-            obj.ptr = new str(value);
+            obj.ptr = new (std::nothrow) str(value);
+            while (obj.ptr == NULL)
+            {
+                LRU();
+                obj.ptr = new (std::nothrow) str(value);
+            }
             pair.first = key;
             pair.second = obj;
-            map.insert(pair);
+            while (!inserted(map, pair))
+            {
+                LRU();
+            }
             obj.delete_Val_ptr();
             delete[] value;
         }
