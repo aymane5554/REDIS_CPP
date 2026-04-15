@@ -54,7 +54,12 @@ void Cache::Deserialize()
             read(fd, &obj.seconds, 8);
         read(fd, &obj.type, 1);
         read(fd, &klen, 4);
-        key = new char[klen + 1];
+        key = new (std::nothrow) char[klen + 1];
+        while (key == NULL)
+        {
+            LRU();
+            key = new (std::nothrow) char[klen + 1];
+        }
         read(fd, key, klen);
         key[klen] = '\0';
         if (obj.type == Val::STR)
@@ -86,6 +91,7 @@ void Cache::Deserialize()
         delete[] key;
     }
     close(fd);
+    std::cout << "End of Deserialization" << std::endl;
 }
 
 void Cache::Serialize()

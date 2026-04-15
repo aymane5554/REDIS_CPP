@@ -84,16 +84,22 @@ void Cache::check_expired_values()
 void Cache::Set(std::vector<str> &cmd)
 {
     Val obj;
+    std::unordered_map <str, Val>::iterator it;
+
     try
     {
         obj.type = Val::STR;
         obj.ptr = new str(cmd[2]);
-        if (map.find(cmd[1]) == map.end())
+        it = map.find(cmd[1]);
+        if (it == map.end())
             map.insert(std::make_pair(cmd[1], obj));
         else
         {
-            map.erase(cmd[1]);
-            map.insert(std::make_pair(cmd[1], obj));
+            map.erase(it);
+            recent_usage.erase(it->second.recent_usage_it);
+            it = map.insert(std::make_pair(cmd[1], obj)).first;
+            recent_usage.push_back(it);
+            it->second.recent_usage_it = recent_usage.end() - 1;
         }
     }
     catch (std::exception &e)
@@ -104,50 +110,76 @@ void Cache::Set(std::vector<str> &cmd)
 
 str Cache::Get(str Key)
 {
-    if (map.find(Key) == map.end())
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(Key);
+    if (it == map.end())
         throw ERROR("$-1\r\n");
-    Val &val = map[Key];
-    if (val.type != Val::STR)
+    if (it->second.type != Val::STR)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    return *static_cast<str *>(val.ptr);
+    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.push_back(it);
+    it->second.recent_usage_it = recent_usage.end() - 1;
+    return *static_cast<str *>(it->second.ptr);
 }
 
 void Cache::Del(str Key)
 {
-    if (map.find(Key) == map.end())
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(Key);
+    if (it == map.end())
     {
         throw ERROR(":0\r\n");
     }
-    map.erase(Key);
+    recent_usage.erase(it->second.recent_usage_it);
+    map.erase(it);
 }
 
 bool Cache::Exists(str Key)
 {
-    if (map.find(Key) == map.end())
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(Key);
+    if (it == map.end())
     {
         throw ERROR(":0\r\n");
     }
+    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.push_back(it);
+    it->second.recent_usage_it = recent_usage.end() - 1;
     return true;
 }
 
 void Cache::Expire(str Key, long long seconds)
 {
     time_t time = std::time(nullptr);
+    std::unordered_map <str, Val>::iterator it;
 
-    if (map.find(Key) == map.end())
+    it = map.find(Key);
+    if (it == map.end())
     {
         throw ERROR(":0\r\n");
     }
-    map[Key].seconds = time + seconds;
+    it->second.seconds = time + seconds;
+    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.push_back(it);
+    it->second.recent_usage_it = recent_usage.end() - 1;
 }
 
 long long Cache::Ttl(str Key)
 {
-    if (map.find(Key) == map.end())
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(Key);
+    if (it == map.end())
     {
         throw ERROR(":-2\r\n");
     }
-    return map[Key].seconds;
+    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.push_back(it);
+    it->second.recent_usage_it = recent_usage.end() - 1;
+    return it->second.seconds;
 }
 
 void Cache::Flush()

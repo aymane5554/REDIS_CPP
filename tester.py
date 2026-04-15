@@ -52,7 +52,7 @@ def Flush():
 def main():
     s.connect((HOST, PORT))
     for i in range(1000000000):
-        data = Set(f"key{i}", f"value{i}")
+        data = Set(f"{i}", "value")
         if data.decode() == "-ERR Value Not Set\r\n":
             s.close()
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
