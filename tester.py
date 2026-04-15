@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import socket
-import time
+import random
 
 HOST = '127.0.0.1'
 PORT = 8080 
@@ -51,12 +51,7 @@ def Flush():
 
 def main():
     s.connect((HOST, PORT))
-    for i in range(1000000000):
-        data = Set(f"{i}", "value")
-        if data.decode() == "-ERR Value Not Set\r\n":
-            s.close()
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((HOST, PORT))
+    Set(f"{random.randint(0, 1000000000)}", "value")
     s.close()
 
 if __name__ == "__main__":
