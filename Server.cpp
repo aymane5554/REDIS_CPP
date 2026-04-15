@@ -37,6 +37,7 @@ void Server::run()
     std::thread ttl(&Server::ttl_thread, this);
     std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
     pid_t serializer_pid = -1;
+    Client obj;
 
     ttl.detach();
     signal(SIGINT, sigint_handler);
@@ -63,7 +64,6 @@ void Server::run()
                     client_event.data.fd = conn_fd;
                     client_event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_fd, &client_event);
-                    Client obj;
                     clients.insert(std::make_pair(conn_fd, obj));
                 }
                 else if (events[i].events & EPOLLIN)
@@ -90,6 +90,17 @@ void Server::run()
                 if (clients[fd].send == clients[fd].sent)
                     safe_close(fd);
                 continue ;
+            }
+            catch (std::bad_alloc &e)
+            {
+                cache.LRU();
+                if (clients.find(fd) == clients.end())
+                    safe_close(fd);
+                clients[fd].res_buff = "-ERR memory limit reached resend request";
+                clients[fd].send = clients[fd].res_buff.length();
+                clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
+                if (clients[fd].send == clients[fd].sent)
+                    safe_close(fd);
             }
             catch (std::exception &e)
             {

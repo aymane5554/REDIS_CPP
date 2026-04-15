@@ -86,8 +86,8 @@ void Cache::Set(std::vector<str> &cmd)
     Val obj;
     std::unordered_map <str, Val>::iterator it;
 
-    try
-    {
+    // try
+    // {
         obj.type = Val::STR;
         obj.ptr = new str(cmd[2]);
         it = map.find(cmd[1]);
@@ -101,11 +101,11 @@ void Cache::Set(std::vector<str> &cmd)
             recent_usage.push_back(it);
             it->second.recent_usage_it = recent_usage.end() - 1;
         }
-    }
-    catch (std::exception &e)
-    {
-        throw ERROR("-ERR Value Not Set\r\n");
-    }
+    // }
+    // catch (std::exception &e)
+    // {
+    //     throw ERROR("-ERR Value Not Set\r\n");
+    // }
 }
 
 str Cache::Get(str Key)

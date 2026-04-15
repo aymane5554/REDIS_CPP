@@ -7,8 +7,9 @@
     3. Serialization and Deserialization DONE
     4. LRU eviction                   → cap memory usage IN PROGRESS
         1. limit memory by size example 16mb
-        2. when the limit is reached call LRU <-------------------------------- I am here
+        2. when the limit is reached call LRU
         3. keep track of keys usage
+        fixing bugs <----- i am here
     5. ttl for clients
     6. Write-Ahead Log                → survive crashes
     7. Snapshotting                   → keep the WAL from growing forever

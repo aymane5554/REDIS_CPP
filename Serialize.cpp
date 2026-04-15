@@ -2,11 +2,11 @@
 
 #define MAGIC_NUMBER "\x00\x46\x54\x52\x45\x44\x49\x53"
 
-bool inserted(std::unordered_map<str, Val> &map, std::pair<str, Val> &pair)
+bool inserted(std::unordered_map<str, Val> &map, char *key, Val &obj)
 {
     try
     {
-        map.insert(pair);
+        map.insert(std::make_pair(key, obj));
     }
     catch (std::exception &e)
     {
@@ -27,17 +27,18 @@ void Cache::Deserialize()
     Val obj;
     char *key = NULL;
     char *value = NULL;
-    std::pair<str, Val> pair;
 
     std::cout << "Deserialize" << std::endl;
     if (access("costum.db", F_OK))
     {
+        std::cout << "costumd.db does not exist" << std::endl;
         return;
     }
     fd = open("costum.db", O_RDONLY);
     if (fd < 0)
     {
         perror("Serialization Failed");
+        exit(1);
         return ;
     }
     read(fd, buff, 8);
@@ -79,9 +80,7 @@ void Cache::Deserialize()
                 LRU();
                 obj.ptr = new (std::nothrow) str(value);
             }
-            pair.first = key;
-            pair.second = obj;
-            while (!inserted(map, pair))
+            while (!inserted(map, key, obj))
             {
                 LRU();
             }
