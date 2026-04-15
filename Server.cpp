@@ -94,13 +94,14 @@ void Server::run()
             catch (std::bad_alloc &e)
             {
                 cache.LRU();
-                if (clients.find(fd) == clients.end())
-                    safe_close(fd);
-                clients[fd].res_buff = "-ERR memory limit reached resend request";
-                clients[fd].send = clients[fd].res_buff.length();
-                clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
-                if (clients[fd].send == clients[fd].sent)
-                    safe_close(fd);
+                if (clients.find(fd) != clients.end())
+                {
+                    clients[fd].res_buff = "-ERR memory limit reached resend request";
+                    clients[fd].send = clients[fd].res_buff.length();
+                    clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
+                    if (clients[fd].send == clients[fd].sent)
+                        safe_close(fd);
+                }
             }
             catch (std::exception &e)
             {
