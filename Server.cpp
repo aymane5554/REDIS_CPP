@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+char res[41] = "-ERR memory limit reached resend request";
+
 int set_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) return -1;
@@ -96,9 +98,8 @@ void Server::run()
                 cache.LRU();
                 if (clients.find(fd) != clients.end())
                 {
-                    clients[fd].res_buff = "-ERR memory limit reached resend request";
-                    clients[fd].send = clients[fd].res_buff.length();
-                    clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
+                    clients[fd].send = strlen(res);
+                    clients[fd].sent = send(fd, res, clients[fd].send, MSG_NOSIGNAL);
                     if (clients[fd].send == clients[fd].sent)
                         safe_close(fd);
                 }
