@@ -89,6 +89,13 @@ void Cache::Deserialize()
         }
         delete[] key;
     }
+    std::unordered_map <str, Val>::iterator iterator;
+    read(fd, &len, 4);
+    for (int i = 0; i < len; i++)
+    {
+        read(fd, &iterator, sizeof(std::unordered_map <str, Val>::iterator));
+        recent_usage.push_back(iterator);
+    }
     close(fd);
     std::cout << "End of Deserialization" << std::endl;
 }
@@ -126,6 +133,15 @@ void Cache::Serialize()
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
         }
+    }
+    // serialize recent usage deque
+    std::unordered_map <str, Val>::iterator iterator;
+    keys_number = recent_usage.size();
+    write(fd, &keys_number, 4);
+    for (auto it = recent_usage.begin(); it != recent_usage.end(); it++)
+    {
+        iterator = *it;
+        write(fd, &iterator, sizeof(std::unordered_map <str, Val>::iterator));
     }
     close(fd);
 }

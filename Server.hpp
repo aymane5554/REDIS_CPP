@@ -56,6 +56,7 @@ struct Client
     int bytes;
     int send;
     int sent;
+    bool bad_alloc;
 
     Client()
     {
@@ -89,12 +90,12 @@ class Server
         void parse_request(int fd);
         void send_response(int fd);
         void safe_close(int fd);
-        void Set(int fd); // SET key value → store it
-        void Get(int fd); // GET key → retrieve it
-        void Del(int fd); // DEL key → delete it
-        void Exists(int fd); // EXISTS key → does it exist?
-        void Expire(int fd); // EXPIRE key seconds → auto-delete after N seconds
-        void Ttl(int fd); // TTL key → how many seconds left?
+        void Set(int fd);
+        void Get(int fd);
+        void Del(int fd);
+        void Exists(int fd);
+        void Expire(int fd);
+        void Ttl(int fd);
         void Flush(int fd);
         void ttl_thread();
         Server();

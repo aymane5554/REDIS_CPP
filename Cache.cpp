@@ -88,19 +88,23 @@ void Cache::Set(std::vector<str> &cmd)
 
     // try
     // {
-        obj.type = Val::STR;
-        obj.ptr = new str(cmd[2]);
-        it = map.find(cmd[1]);
-        if (it == map.end())
-            map.insert(std::make_pair(cmd[1], obj));
-        else
-        {
-            map.erase(it);
-            recent_usage.erase(it->second.recent_usage_it);
-            it = map.insert(std::make_pair(cmd[1], obj)).first;
-            recent_usage.push_back(it);
-            it->second.recent_usage_it = recent_usage.end() - 1;
-        }
+    obj.type = Val::STR;
+    obj.ptr = new str(cmd[2]);
+    it = map.find(cmd[1]);
+    if (it == map.end())
+    {
+        it = map.insert(std::make_pair(cmd[1], obj)).first;
+        recent_usage.push_back(it);
+        it->second.recent_usage_it = recent_usage.end() - 1;
+    }
+    else
+    {
+        map.erase(it);
+        recent_usage.erase(it->second.recent_usage_it);
+        it = map.insert(std::make_pair(cmd[1], obj)).first;
+        recent_usage.push_back(it);
+        it->second.recent_usage_it = recent_usage.end() - 1;
+    }
     // }
     // catch (std::exception &e)
     // {

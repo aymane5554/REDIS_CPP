@@ -17,10 +17,20 @@ void Server::send_response(int fd)
 
     if (cl.send != cl.sent)
     {
-        cl.send = cl.res_buff.length() - cl.sent;
-        cl.sent = send(fd, cl.res_buff.c_str() + cl.sent, cl.send, MSG_NOSIGNAL);
-        if (cl.send == cl.sent)
-            make_client_readable(fd, epoll_fd, cl);
+        if (!cl.bad_alloc)
+        {
+            cl.send = cl.res_buff.length() - cl.sent;
+            cl.sent = send(fd, cl.res_buff.c_str() + cl.sent, cl.send, MSG_NOSIGNAL);
+            if (cl.send == cl.sent)
+                make_client_readable(fd, epoll_fd, cl);
+        }
+        else
+        {
+            cl.send = cl.send - cl.sent;
+            clients[fd].sent = send(fd, bad_alloc_res, clients[fd].send, MSG_NOSIGNAL);
+            if (cl.send == cl.sent)
+                make_client_readable(fd, epoll_fd, cl);
+        }
         return ;
     }
     if (cmd_func.find(cmd[0]) != cmd_func.end())

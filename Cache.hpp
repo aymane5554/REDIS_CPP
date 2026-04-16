@@ -6,6 +6,8 @@
 
 typedef std::string str;
 
+extern char bad_alloc_res[41];
+
 class Val
 {
     public:

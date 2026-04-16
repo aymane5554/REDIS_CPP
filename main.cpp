@@ -9,8 +9,9 @@
         1. limit memory by size example 16mb
         2. when the limit is reached call LRU
         3. keep track of keys usage
-        fixing bugs <----- i am here
+        <----- i am here
     5. ttl for clients
+       1. one client at a time (to avoid memory corruption)
     6. Write-Ahead Log                → survive crashes
     7. Snapshotting                   → keep the WAL from growing forever
     8. ADD LIST type
@@ -27,10 +28,13 @@
         [N bytes]  key
         [4 bytes]  value length
         [N bytes]  value
+    [4 bytes] number of keys in Cache::recent_usage
+    [per key]
+        [sizeof(iterator) bytes] iterator
     [8 bytes]  CRC64 checksum <- TODO
 */
 
-std::atomic<bool> sigint = 0;
+std::atomic<bool> sigint;
 
 static bool set_as_limit_bytes(rlim_t bytes)
 {
