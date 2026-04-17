@@ -97,6 +97,7 @@ class Server
         void Expire(int fd);
         void Ttl(int fd);
         void Flush(int fd);
+        void LRU(int fd); // remove later
         void ttl_thread();
         Server();
         ~Server();

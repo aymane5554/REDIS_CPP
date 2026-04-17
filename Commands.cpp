@@ -1,5 +1,25 @@
 #include "Server.hpp"
 
+void Server::LRU(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 1)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.LRU();
+    }
+
+    cl.res_buff = "+OK\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+
 void Server::Del(int fd)
 {
     Client &cl = clients[fd];

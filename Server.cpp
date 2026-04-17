@@ -163,6 +163,7 @@ Server::Server()
     cmd_func.insert(std::make_pair("EXPIRE", &Server::Expire));
     cmd_func.insert(std::make_pair("TTL", &Server::Ttl));
     cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
+    cmd_func.insert(std::make_pair("LRU", &Server::LRU)); // remove later
 
     last_serialization = std::time(NULL);
 }
