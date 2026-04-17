@@ -80,7 +80,8 @@ void Server::run()
                 }
                 else if (events[i].events & (EPOLLHUP | EPOLLERR))
                 {
-                    safe_close(fd);
+                    if (clients.find(fd) != clients.end())
+                        safe_close(fd);
                     continue;
                 }
             }
@@ -89,7 +90,9 @@ void Server::run()
                 clients[fd].res_buff = e.what();
                 clients[fd].send = clients[fd].res_buff.length();
                 clients[fd].sent = send(fd, clients[fd].res_buff.c_str(), clients[fd].send, MSG_NOSIGNAL);
-                if (clients[fd].send == clients[fd].sent)
+                if (clients[fd].sent <= 0)
+                    safe_close(fd);
+                else if (clients[fd].send == clients[fd].sent)
                     safe_close(fd);
                 continue ;
             }
@@ -100,7 +103,9 @@ void Server::run()
                 {
                     clients[fd].send = strlen(bad_alloc_res);
                     clients[fd].sent = send(fd, bad_alloc_res, clients[fd].send, MSG_NOSIGNAL);
-                    if (clients[fd].send == clients[fd].sent)
+                    if (clients[fd].sent <= 0)
+                        safe_close(fd);
+                    else if (clients[fd].send == clients[fd].sent)
                         safe_close(fd);
                 }
             }

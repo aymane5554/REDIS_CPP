@@ -9,9 +9,8 @@
         1. limit memory by size example 16mb
         2. when the limit is reached call LRU
         3. keep track of keys usage
-        <----- i am here
+        testing <----- i am here
     5. ttl for clients
-       1. one client at a time (to avoid memory corruption)
     6. Write-Ahead Log                → survive crashes
     7. Snapshotting                   → keep the WAL from growing forever
     8. ADD LIST type

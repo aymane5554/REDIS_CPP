@@ -21,14 +21,18 @@ void Server::send_response(int fd)
         {
             cl.send = cl.res_buff.length() - cl.sent;
             cl.sent = send(fd, cl.res_buff.c_str() + cl.sent, cl.send, MSG_NOSIGNAL);
-            if (cl.send == cl.sent)
+            if (clients[fd].sent <= 0)
+                safe_close(fd);
+            else if (cl.send == cl.sent)
                 make_client_readable(fd, epoll_fd, cl);
         }
         else
         {
             cl.send = cl.send - cl.sent;
             clients[fd].sent = send(fd, bad_alloc_res, clients[fd].send, MSG_NOSIGNAL);
-            if (cl.send == cl.sent)
+            if (clients[fd].sent <= 0)
+                safe_close(fd);
+            else if (cl.send == cl.sent)
                 make_client_readable(fd, epoll_fd, cl);
         }
         return ;
@@ -41,7 +45,9 @@ void Server::send_response(int fd)
     {
         throw ERROR("-ERR Unsupported Command\r\n");
     }
-    if (cl.send == cl.sent)
+    if (clients[fd].sent <= 0)
+        safe_close(fd);
+    else if (cl.send == cl.sent)
     {
         make_client_readable(fd, epoll_fd, cl);
     }
