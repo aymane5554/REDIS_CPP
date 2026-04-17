@@ -92,7 +92,7 @@ void Cache::Set(std::vector<str> &cmd)
     if (it == map.end())
     {
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it);
+        recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_it = recent_usage.end() - 1;
     }
     else
@@ -100,7 +100,7 @@ void Cache::Set(std::vector<str> &cmd)
         recent_usage.erase(it->second.recent_usage_it);
         map.erase(it);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it);
+        recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_it = recent_usage.end() - 1;
     }
 }
@@ -115,7 +115,7 @@ str Cache::Get(str Key)
     if (it->second.type != Val::STR)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     recent_usage.erase(it->second.recent_usage_it);
-    recent_usage.push_back(it);
+    recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_it = recent_usage.end() - 1;
     return *static_cast<str *>(it->second.ptr);
 }
@@ -143,7 +143,7 @@ bool Cache::Exists(str Key)
         throw ERROR(":0\r\n");
     }
     recent_usage.erase(it->second.recent_usage_it);
-    recent_usage.push_back(it);
+    recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_it = recent_usage.end() - 1;
     return true;
 }
@@ -160,7 +160,7 @@ void Cache::Expire(str Key, long long seconds)
     }
     it->second.seconds = time + seconds;
     recent_usage.erase(it->second.recent_usage_it);
-    recent_usage.push_back(it);
+    recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_it = recent_usage.end() - 1;
 }
 
@@ -174,7 +174,7 @@ long long Cache::Ttl(str Key)
         throw ERROR(":-2\r\n");
     }
     recent_usage.erase(it->second.recent_usage_it);
-    recent_usage.push_back(it);
+    recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_it = recent_usage.end() - 1;
     return it->second.seconds;
 }

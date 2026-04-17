@@ -20,7 +20,7 @@ class Val
         long long seconds;
         void *ptr;
         Val::t_type type;
-        std::deque <std::unordered_map <str, Val>::iterator>::iterator recent_usage_it;
+        std::deque <const char *>::iterator recent_usage_it;
 
         void delete_Val_ptr();
         void new_Val_ptr(const Val &obj);
@@ -34,7 +34,7 @@ class Val
 class Cache
 {
     std::unordered_map <str, Val> map;
-    std::deque <std::unordered_map <str, Val>::iterator> recent_usage;
+    std::deque <const char *> recent_usage;
     public:
         void Set(std::vector<str> &cmd); // SET key value → store it
         str Get(str Key); // GET key → retrieve it

@@ -27,6 +27,7 @@ void Cache::Deserialize()
     Val obj;
     char *key = NULL;
     char *value = NULL;
+    std::unordered_map<str, Val>::iterator obj_it;
 
     std::cout << "Deserialize" << std::endl;
     if (access("costum.db", F_OK))
@@ -86,16 +87,11 @@ void Cache::Deserialize()
             }
             obj.delete_Val_ptr();
             delete[] value;
+            obj_it = map.find(key);
+            recent_usage.push_back(obj_it->first.c_str());
+            obj_it->second.recent_usage_it = recent_usage.end() - 1;
         }
         delete[] key;
-    }
-    std::unordered_map <str, Val>::iterator iterator;
-    read(fd, &len, 4);
-    for (int i = 0; i < len; i++)
-    {
-        read(fd, &iterator, sizeof(std::unordered_map <str, Val>::iterator));
-        // std::cout << "deserialized key" << iterator->first << std::endl;
-        recent_usage.push_back(iterator);
     }
     close(fd);
     std::cout << "End of Deserialization" << std::endl;
@@ -117,8 +113,9 @@ void Cache::Serialize()
 
     write (fd, MAGIC_NUMBER, 8);
     write (fd, &keys_number, 4);
-    for (auto i = map.begin(); i != map.end(); i++)
+    for (std::deque <const char *>::iterator it = recent_usage.begin(); it != recent_usage.end(); it++)
     {
+        std::unordered_map <str, Val>::iterator i = map.find(*it);
         is_ttl = (i->second.seconds == -1) ? 0 : 1;
         write (fd, &is_ttl, 1);
         if (is_ttl)
@@ -134,15 +131,6 @@ void Cache::Serialize()
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
         }
-    }
-    // serialize recent usage deque
-    keys_number = recent_usage.size();
-    write(fd, &keys_number, 4);
-    for (std::deque <std::unordered_map <str, Val>::iterator>::iterator it = recent_usage.begin(); it != recent_usage.end(); it++)
-    {
-        std::unordered_map <str, Val>::iterator iterator = *it;
-        // std::cout << "serialized key " << iterator->first << std::endl;
-        write(fd, &iterator, sizeof(std::unordered_map <str, Val>::iterator));
     }
     close(fd);
 }

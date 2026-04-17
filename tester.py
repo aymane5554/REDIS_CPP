@@ -67,6 +67,7 @@ Commands:
   del    <key>
   exists <key>
   flush
+  lru
 """
 
 DISPATCH = {

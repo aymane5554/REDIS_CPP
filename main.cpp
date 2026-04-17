@@ -28,9 +28,6 @@
         [N bytes]  key
         [4 bytes]  value length
         [N bytes]  value
-    [4 bytes] number of keys in Cache::recent_usage
-    [per key]
-        [sizeof(iterator) bytes] iterator
     [8 bytes]  CRC64 checksum <- TODO
 */
 
