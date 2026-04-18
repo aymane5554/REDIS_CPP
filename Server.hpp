@@ -18,6 +18,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <algorithm>
 
 #include "Cache.hpp"
 
@@ -26,7 +27,7 @@
 #define BUF_SIZE    4096
 #define TTL_SLEEP_TIME 60
 #define SERIALIZE_TIME 30
-#define TIMEOUT 3
+#define TIMEOUT 10
 #define MEMORY_LIMIT_MB 16 // or higher
 
 extern std::atomic<bool> sigint;

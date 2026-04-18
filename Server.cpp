@@ -72,14 +72,12 @@ void Server::run()
                 }
                 else if (events[i].events & EPOLLIN)
                 {
-                    std::cout << "REQUEST" << std::endl;
                     parse_request(fd);
                     clients[fd].last_active_time_s = time(NULL);
                     continue ;
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
-                    std::cout << "RESPONSE" << std::endl;
                     send_response(fd);
                     clients[fd].last_active_time_s = time(NULL);
                     continue;
@@ -127,7 +125,7 @@ void Server::run()
         time_t now = time(NULL);
         for (auto it = clients.begin(); it != clients.end(); )
         {
-            if (now - it->second.last_active_time_s >= 3)
+            if (now - it->second.last_active_time_s >= TIMEOUT)
             {
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second.fd, NULL);
                 close(it->second.fd);

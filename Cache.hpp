@@ -20,7 +20,7 @@ class Val
         long long seconds;
         void *ptr;
         Val::t_type type;
-        std::deque <const char *>::iterator recent_usage_it;
+        size_t recent_usage_idx;
 
         void delete_Val_ptr();
         void new_Val_ptr(const Val &obj);

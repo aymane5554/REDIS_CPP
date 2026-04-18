@@ -89,7 +89,7 @@ void Cache::Deserialize()
             delete[] value;
             obj_it = map.find(key);
             recent_usage.push_back(obj_it->first.c_str());
-            obj_it->second.recent_usage_it = recent_usage.end() - 1;
+            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
         }
         delete[] key;
     }

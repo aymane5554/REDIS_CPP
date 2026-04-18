@@ -93,15 +93,15 @@ void Cache::Set(std::vector<str> &cmd)
     {
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_it = recent_usage.end() - 1;
+        it->second.recent_usage_idx = recent_usage.size() - 1;
     }
     else
     {
-        recent_usage.erase(it->second.recent_usage_it);
+        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         map.erase(it);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_it = recent_usage.end() - 1;
+        it->second.recent_usage_idx = recent_usage.size() - 1;
     }
 }
 
@@ -114,9 +114,9 @@ str Cache::Get(str Key)
         throw ERROR("$-1\r\n");
     if (it->second.type != Val::STR)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_it = recent_usage.end() - 1;
+    it->second.recent_usage_idx = recent_usage.size() - 1;
     return *static_cast<str *>(it->second.ptr);
 }
 
@@ -129,7 +129,7 @@ void Cache::Del(str Key)
     {
         throw ERROR(":0\r\n");
     }
-    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     map.erase(it);
 }
 
@@ -142,9 +142,9 @@ bool Cache::Exists(str Key)
     {
         throw ERROR(":0\r\n");
     }
-    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_it = recent_usage.end() - 1;
+    it->second.recent_usage_idx = recent_usage.size() - 1;
     return true;
 }
 
@@ -159,9 +159,9 @@ void Cache::Expire(str Key, long long seconds)
         throw ERROR(":0\r\n");
     }
     it->second.seconds = time + seconds;
-    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_it = recent_usage.end() - 1;
+    it->second.recent_usage_idx = recent_usage.size() - 1;
 }
 
 long long Cache::Ttl(str Key)
@@ -173,9 +173,9 @@ long long Cache::Ttl(str Key)
     {
         throw ERROR(":-2\r\n");
     }
-    recent_usage.erase(it->second.recent_usage_it);
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_it = recent_usage.end() - 1;
+    it->second.recent_usage_idx = recent_usage.size() - 1;
     return it->second.seconds;
 }
 
