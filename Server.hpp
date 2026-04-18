@@ -26,6 +26,7 @@
 #define BUF_SIZE    4096
 #define TTL_SLEEP_TIME 60
 #define SERIALIZE_TIME 30
+#define TIMEOUT 3
 #define MEMORY_LIMIT_MB 16 // or higher
 
 extern std::atomic<bool> sigint;
@@ -52,10 +53,12 @@ struct Client
     str res_buff;
     str req_buff;
     std::vector <str> cmd;
+    long long last_active_time_s;
     int lines;
     int bytes;
     int send;
     int sent;
+    int fd;
     bool bad_alloc;
 
     Client()
