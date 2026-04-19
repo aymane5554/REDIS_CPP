@@ -188,6 +188,11 @@ Server::Server()
     cmd_func.insert(std::make_pair("FLUSH", &Server::Flush));
     cmd_func.insert(std::make_pair("TYPE", &Server::Type));
     cmd_func.insert(std::make_pair("QUIT", &Server::Quit));
+    cmd_func.insert(std::make_pair("LPOP", &Server::Lpop));
+    cmd_func.insert(std::make_pair("RPOP", &Server::Rpop));
+    cmd_func.insert(std::make_pair("LPUSH", &Server::Lpush));
+    cmd_func.insert(std::make_pair("RPUSH", &Server::Rpush));
+    cmd_func.insert(std::make_pair("LRANGE", &Server::Lrange));
 
     last_serialization = std::time(NULL);
 }

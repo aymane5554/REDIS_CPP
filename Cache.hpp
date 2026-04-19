@@ -37,13 +37,18 @@ class Cache
     std::deque <const char *> recent_usage;
     public:
         void Set(std::vector<str> &cmd); // SET key value → store it
-        str Get(str Key); // GET key → retrieve it
-        void Del(str Key); // DEL key → delete it
-        bool Exists(str Key); // EXISTS key → does it exist?
-        void Expire(str Key, long long seconds); // EXPIRE key seconds → auto-delete after N seconds
-        long long Ttl(str Key); // TTL key → how many seconds left?
+        void Lpush(std::vector<str> &cmd);
+        void Rpush(std::vector<str> &cmd);
+        void Lpop(str &key);
+        void Rpop(str &key);
+        str Lrange(std::vector<str> &cmd);
+        str Get(str &Key); // GET key → retrieve it
+        void Del(str &Key); // DEL key → delete it
+        bool Exists(str &Key); // EXISTS key → does it exist?
+        void Expire(str &Key, long long seconds); // EXPIRE key seconds → auto-delete after N seconds
+        long long Ttl(str &Key); // TTL key → how many seconds left?
         void Flush(); // FLUSH → wipe everything
-        str Type(str Key);
+        str Type(str &Key);
         void check_expired_values();
         void Serialize();
         void Deserialize();

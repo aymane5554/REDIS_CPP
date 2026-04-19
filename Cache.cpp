@@ -81,7 +81,7 @@ void Cache::check_expired_values()
     }
 }
 
-str Cache::Type(str Key)
+str Cache::Type(str &Key)
 {
     std::unordered_map <str, Val>::iterator it;
 
@@ -120,7 +120,7 @@ void Cache::Set(std::vector<str> &cmd)
     }
 }
 
-str Cache::Get(str Key)
+str Cache::Get(str &Key)
 {
     std::unordered_map <str, Val>::iterator it;
 
@@ -135,7 +135,7 @@ str Cache::Get(str Key)
     return *static_cast<str *>(it->second.ptr);
 }
 
-void Cache::Del(str Key)
+void Cache::Del(str &Key)
 {
     std::unordered_map <str, Val>::iterator it;
 
@@ -148,7 +148,7 @@ void Cache::Del(str Key)
     map.erase(it);
 }
 
-bool Cache::Exists(str Key)
+bool Cache::Exists(str &Key)
 {
     std::unordered_map <str, Val>::iterator it;
 
@@ -163,7 +163,7 @@ bool Cache::Exists(str Key)
     return true;
 }
 
-void Cache::Expire(str Key, long long seconds)
+void Cache::Expire(str &Key, long long seconds)
 {
     time_t time = std::time(nullptr);
     std::unordered_map <str, Val>::iterator it;
@@ -179,7 +179,7 @@ void Cache::Expire(str Key, long long seconds)
     it->second.recent_usage_idx = recent_usage.size() - 1;
 }
 
-long long Cache::Ttl(str Key)
+long long Cache::Ttl(str &Key)
 {
     std::unordered_map <str, Val>::iterator it;
 
@@ -198,6 +198,92 @@ void Cache::Flush()
 {
     map.clear();
     recent_usage.clear();
+}
+
+void Cache::Lpush(std::vector<str> &cmd)
+{
+    std::unordered_map <str, Val>::iterator it;
+    Val obj;
+
+    it = map.find(cmd[0]);
+    if (it == map.end())
+    {
+        obj.type = Val::LIST;
+        obj.ptr = new std::list<str>;
+        static_cast<std::list<str> *>(obj.ptr)->push_back(cmd[1]);
+        it = map.insert(std::make_pair(cmd[0], obj)).first;
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+    }
+    else
+    {
+        static_cast<std::list<str> *>(it->second.ptr)->push_back(cmd[1]);
+        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+    }
+}
+
+void Cache::Rpush(std::vector<str> &cmd)
+{
+    std::unordered_map <str, Val>::iterator it;
+    Val obj;
+
+    it = map.find(cmd[0]);
+    if (it == map.end())
+    {
+        obj.type = Val::LIST;
+        obj.ptr = new std::list<str>;
+        static_cast<std::list<str> *>(obj.ptr)->push_front(cmd[1]);
+        it = map.insert(std::make_pair(cmd[0], obj)).first;
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+    }
+    else
+    {
+        static_cast<std::list<str> *>(it->second.ptr)->push_front(cmd[1]);
+        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+    }
+}
+
+void Cache::Lpop(str &key)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(key);
+    if (it == map.end())
+    {
+        throw ERROR(":0\r\n");
+    }
+    static_cast<std::list<str> *>(it->second.ptr)->pop_back();
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+}
+
+void Cache::Rpop(str &key)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(key);
+    if (it == map.end())
+    {
+        throw ERROR(":0\r\n");
+    }
+    static_cast<std::list<str> *>(it->second.ptr)->pop_front();
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+}
+
+str Cache::Lrange(std::vector<str> &cmd)
+{
+    str val;
+    
+    (void)cmd;
+    return val;
 }
 
 Cache::Cache()

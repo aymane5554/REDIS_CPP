@@ -16,8 +16,6 @@
         LPOP
         RPOP
         LRANGE
-        QUIT
-        TYPE
     7. Write-Ahead Log                → survive crashes
     8. Snapshotting                   → keep the WAL from growing forever
     9. add checksum to file format

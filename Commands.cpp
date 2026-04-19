@@ -179,3 +179,87 @@ void Server::Quit(int fd)
     cl.send = cl.res_buff.length();
     cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
+
+void Server::Lpop(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 2)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Lpop(clients[fd].cmd[1]);
+    }
+
+    cl.res_buff = ":1\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Rpop(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 2)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Rpop(clients[fd].cmd[1]);
+    }
+
+    cl.res_buff = ":1\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Lpush(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 3)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Lpush(clients[fd].cmd);
+    }
+
+    cl.res_buff = "+OK\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Rpush(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 3)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Rpush(clients[fd].cmd);
+    }
+
+    cl.res_buff = "+OK\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Lrange(int fd)
+{
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Lrange(clients[fd].cmd);
+    } 
+}

@@ -22,6 +22,7 @@
 
 #include "Cache.hpp"
 
+#define DB_FILE     "costum.db"
 #define PORT        8080
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
@@ -106,6 +107,11 @@ class Server
         void Flush(int fd);
         void Type(int fd);
         void Quit(int fd);
+        void Lpush(int fd);
+        void Rpush(int fd);
+        void Lpop(int fd);
+        void Rpop(int fd);
+        void Lrange(int fd);
         void ttl_thread();
         Server();
         ~Server();

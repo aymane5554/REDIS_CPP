@@ -30,12 +30,12 @@ void Cache::Deserialize()
     std::unordered_map<str, Val>::iterator obj_it;
 
     std::cout << "Deserialize" << std::endl;
-    if (access("costum.db", F_OK))
+    if (access(DB_FILE, F_OK))
     {
         std::cout << "costumd.db does not exist" << std::endl;
         return;
     }
-    fd = open("costum.db", O_RDONLY);
+    fd = open(DB_FILE, O_RDONLY);
     if (fd < 0)
     {
         perror("Serialization Failed");
@@ -91,6 +91,10 @@ void Cache::Deserialize()
             recent_usage.push_back(obj_it->first.c_str());
             obj_it->second.recent_usage_idx = recent_usage.size() - 1;
         }
+        else // type == list
+        {
+
+        }
         delete[] key;
     }
     close(fd);
@@ -100,7 +104,7 @@ void Cache::Deserialize()
 void Cache::Serialize()
 {
     std::cout << "Serialize" << std::endl;
-    int fd = open("costum.db", O_CREAT | O_TRUNC | O_RDWR, 0777);
+    int fd = open(DB_FILE, O_CREAT | O_TRUNC | O_RDWR, 0777);
     if (fd < 0)
     {
         perror("Serialization Failed");
@@ -130,6 +134,10 @@ void Cache::Serialize()
             len = s_val->length();
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
+        }
+        else // type == list
+        {
+
         }
     }
     close(fd);
