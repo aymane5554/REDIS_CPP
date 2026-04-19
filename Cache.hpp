@@ -43,6 +43,7 @@ class Cache
         void Expire(str Key, long long seconds); // EXPIRE key seconds → auto-delete after N seconds
         long long Ttl(str Key); // TTL key → how many seconds left?
         void Flush(); // FLUSH → wipe everything
+        str Type(str Key);
         void check_expired_values();
         void Serialize();
         void Deserialize();

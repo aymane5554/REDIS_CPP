@@ -32,6 +32,8 @@ void Server::send_response(int fd)
             clients[fd].sent = send(fd, bad_alloc_res, clients[fd].send, MSG_NOSIGNAL);
             if (clients[fd].sent <= 0)
                 safe_close(fd);
+            else if (clients[fd].quit && (cl.send == cl.sent))
+                safe_close(fd);
             else if (cl.send == cl.sent)
                 make_client_readable(fd, epoll_fd, cl);
         }
@@ -46,6 +48,8 @@ void Server::send_response(int fd)
         throw ERROR("-ERR Unsupported Command\r\n");
     }
     if (clients[fd].sent <= 0)
+        safe_close(fd);
+    else if (clients[fd].quit && (cl.send == cl.sent))
         safe_close(fd);
     else if (cl.send == cl.sent)
     {

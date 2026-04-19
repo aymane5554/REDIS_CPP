@@ -81,6 +81,21 @@ void Cache::check_expired_values()
     }
 }
 
+str Cache::Type(str Key)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(Key);
+    if (it == map.end())
+        throw ERROR("+none\r\n");
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+    if (it->second.type == Val::STR)
+        return "+string\r\n";
+    return "+list\r\n";
+}
+
 void Cache::Set(std::vector<str> &cmd)
 {
     Val obj;

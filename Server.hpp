@@ -61,6 +61,7 @@ struct Client
     int sent;
     int fd;
     bool bad_alloc;
+    bool quit;
 
     Client()
     {
@@ -68,6 +69,7 @@ struct Client
         bytes = -1;
         send = 0;
         sent = 0;
+        quit = false;
     }
     void clear()
     {
@@ -75,6 +77,7 @@ struct Client
         bytes = -1;
         send = 0;
         sent = 0;
+        quit = false;
         res_buff.clear();
         cmd.clear();
     }
@@ -101,7 +104,8 @@ class Server
         void Expire(int fd);
         void Ttl(int fd);
         void Flush(int fd);
-        void LRU(int fd); // remove later
+        void Type(int fd);
+        void Quit(int fd);
         void ttl_thread();
         Server();
         ~Server();
