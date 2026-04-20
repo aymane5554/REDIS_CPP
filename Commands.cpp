@@ -260,10 +260,16 @@ void Server::Lrange(int fd)
 {
     Client &cl = clients[fd];
 
+    if (clients[fd].cmd.size() != 4)
+    {
+        throw ERROR("-ERR unvalid number of argument\r\n");
+    }
+
     {
         std::lock_guard<std::mutex> lock(mtx);
         cache.Lrange(cl.cmd, cl.req_buff);
     }
+
     cl.send = cl.res_buff.length();
     cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
