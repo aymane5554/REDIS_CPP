@@ -267,7 +267,7 @@ void Server::Lrange(int fd)
 
     {
         std::lock_guard<std::mutex> lock(mtx);
-        cache.Lrange(cl.cmd, cl.req_buff);
+        cache.Lrange(cl.cmd, cl.res_buff);
     }
 
     cl.send = cl.res_buff.length();

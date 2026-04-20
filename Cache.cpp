@@ -211,7 +211,7 @@ void Cache::Lpush(std::vector<str> &cmd)
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
         static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[1]);
-        it = map.insert(std::make_pair(cmd[0], obj)).first;
+        it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
@@ -235,7 +235,7 @@ void Cache::Rpush(std::vector<str> &cmd)
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
         static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[1]);
-        it = map.insert(std::make_pair(cmd[0], obj)).first;
+        it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
@@ -291,12 +291,21 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
         throw ERROR("*0\r\n");
     if (it->second.type != Val::LIST)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    
-    l = static_cast<std::deque<str> *>(it->second.ptr);
-    start = std::stol(cmd[2]);
-    stop = std::stol(cmd[3]);
-    lsize = (long long)l->size();
+    try
+    {
+        std::cout << "start = " << cmd[2] << " stop = " << cmd[3] << std::endl;
+        start = std::stol(cmd[2]);
+        stop = std::stol(cmd[3]);
+    }
+    catch(const std::exception& e)
+    {
+        throw ERROR("-ERR Bad Request\r\n");
+    }
 
+    l = static_cast<std::deque<str> *>(it->second.ptr);
+    lsize = (long long)l->size();
+    starti = start;
+    stopi = stop;
     if (start < 0)
         starti = lsize - start;
     if (stop < 0)
@@ -311,11 +320,12 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
+    std::cout << "start = " << starti << " stop = " << stopi << std::endl;
     res_buf = "*" + std::to_string(stopi - starti) + "\r\n";
     for (int i = starti; i <= stopi; i++)
     {
-        res_buf += "$" + std::to_string((*l)[0].size()) + "\r\n";
-        res_buf += (*l)[0];
+        res_buf += "$" + std::to_string((*l)[i].size()) + "\r\n";
+        res_buf += (*l)[i];
     }
 }
 

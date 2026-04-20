@@ -1,10 +1,25 @@
 #!/usr/bin/python3
 import socket
 import sys
+import random
 
 HOST = '127.0.0.1'
 PORT = 8080
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+def Lpush(key, value):
+    message = f"*3\r\n$5\r\nLPUSH\r\n${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"LPUSH {key} {value} {data.decode('utf-8')}")
+    return data
+
+def Lrange(key, start, stop):
+    message = f"*4\r\n$6\r\nLRANGE\r\n${len(key)}\r\n{key}\r\n${len(start)}\r\n{start}\r\n${len(stop)}\r\n{stop}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"Lrange {key} {data.decode('utf-8')}")
+    return data
 
 def Set(key, value):
     message = f"*3\r\n$3\r\nSET\r\n${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
@@ -18,12 +33,6 @@ def Get(key):
     s.send(message)
     data = s.recv(1024)
     print(f"GET {key} {data.decode('utf-8')}")
-
-def Type(key):
-    message = f"*2\r\n$4\r\nTYPE\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
-    s.send(message)
-    data = s.recv(1024)
-    print(f"TYPE {key} {data.decode('utf-8')}")
 
 def Expire(key, seconds):
     message = f"*3\r\n$6\r\nEXPIRE\r\n${len(key)}\r\n{key}\r\n${len(str(seconds))}\r\n{seconds}\r\n".encode('utf-8')
@@ -55,11 +64,11 @@ def Flush():
     data = s.recv(1024)
     print(f"FLUSH {data.decode('utf-8')}")
 
-def Quit():
-    message = b"*1\r\n$4\r\nQUIT\r\n"
+def Lru():
+    message = b"*1\r\n$3\r\nLRU\r\n"
     s.send(message)
     data = s.recv(1024)
-    print(f"QUIT {data.decode('utf-8')}")
+    print(f"LRU {data.decode('utf-8')}")
 
 USAGE = """
 Usage: script.py <command> [args...]
@@ -67,25 +76,25 @@ Usage: script.py <command> [args...]
 Commands:
   set    <key> <value>
   get    <key>
-  type   <key>
   expire <key> <seconds>
   ttl    <key>
   del    <key>
   exists <key>
   flush
-  quit
+  lru
 """
 
 DISPATCH = {
     "set":    (Set,    ["key", "value"]),
     "get":    (Get,    ["key"]),
-    "type":    (Type,    ["key"]),
     "expire": (Expire, ["key", "seconds"]),
     "ttl":    (TTL,    ["key"]),
     "del":    (Del,    ["key"]),
     "exists": (Exists, ["key"]),
     "flush":  (Flush,  []),
-    "quit":  (Quit,  []),
+    "lpush": (Lpush, ["key", "value"]),
+    "lrange": (Lrange, ["key", "start", "stop"]),
+    "lru":  (Lru,  []),
 }
 
 def main():
