@@ -41,7 +41,7 @@ class Cache
         void Rpush(std::vector<str> &cmd);
         void Lpop(str &key);
         void Rpop(str &key);
-        str Lrange(std::vector<str> &cmd);
+        void Lrange(std::vector<str> &cmd, str &res_buf);
         str Get(str &Key); // GET key → retrieve it
         void Del(str &Key); // DEL key → delete it
         bool Exists(str &Key); // EXISTS key → does it exist?

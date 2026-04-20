@@ -98,7 +98,7 @@ void Server::run()
                 if (clients[fd].sent <= 0)
                     safe_close(fd);
                 else if (clients[fd].send == clients[fd].sent)
-                    safe_close(fd);
+                    make_client_readable(fd,  epoll_fd, clients[fd]);
                 continue ;
             }
             catch (std::bad_alloc &e)

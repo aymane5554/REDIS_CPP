@@ -39,7 +39,7 @@ void Val::delete_Val_ptr()
     }
     else if (type == Val::LIST)
     {
-        delete static_cast<std::list<str> *>(ptr);
+        delete static_cast<std::deque<str> *>(ptr);
     }
     ptr = NULL;
 }
@@ -53,7 +53,7 @@ void Val::new_Val_ptr(const Val &obj)
     }
     else if (obj.type == Val::LIST)
     {
-        this->ptr = new std::list<str>;
+        this->ptr = new std::deque<str>;
     }
 }
 
@@ -64,7 +64,7 @@ void Val::copy_Val_ptr(const Val &obj)
         *static_cast<str *>(this->ptr) = *static_cast<str *>(obj.ptr);
     }
     else if (obj.type == Val::LIST)
-        *static_cast<std::list<str> *>(this->ptr) = *static_cast<std::list<str> *>(obj.ptr); 
+        *static_cast<std::deque<str> *>(this->ptr) = *static_cast<std::deque<str> *>(obj.ptr); 
 }
 
 void Cache::check_expired_values()
@@ -209,15 +209,15 @@ void Cache::Lpush(std::vector<str> &cmd)
     if (it == map.end())
     {
         obj.type = Val::LIST;
-        obj.ptr = new std::list<str>;
-        static_cast<std::list<str> *>(obj.ptr)->push_back(cmd[1]);
+        obj.ptr = new std::deque<str>;
+        static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[1]);
         it = map.insert(std::make_pair(cmd[0], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
     else
     {
-        static_cast<std::list<str> *>(it->second.ptr)->push_back(cmd[1]);
+        static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[1]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -233,15 +233,15 @@ void Cache::Rpush(std::vector<str> &cmd)
     if (it == map.end())
     {
         obj.type = Val::LIST;
-        obj.ptr = new std::list<str>;
-        static_cast<std::list<str> *>(obj.ptr)->push_front(cmd[1]);
+        obj.ptr = new std::deque<str>;
+        static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[1]);
         it = map.insert(std::make_pair(cmd[0], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
     else
     {
-        static_cast<std::list<str> *>(it->second.ptr)->push_front(cmd[1]);
+        static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[1]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -257,7 +257,7 @@ void Cache::Lpop(str &key)
     {
         throw ERROR(":0\r\n");
     }
-    static_cast<std::list<str> *>(it->second.ptr)->pop_back();
+    static_cast<std::deque<str> *>(it->second.ptr)->pop_back();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -272,18 +272,51 @@ void Cache::Rpop(str &key)
     {
         throw ERROR(":0\r\n");
     }
-    static_cast<std::list<str> *>(it->second.ptr)->pop_front();
+    static_cast<std::deque<str> *>(it->second.ptr)->pop_front();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
 }
 
-str Cache::Lrange(std::vector<str> &cmd)
+void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
 {
-    str val;
+    std::unordered_map <str, Val>::iterator it;
+    std::deque<str> *l;
+    long start = 0, stop = 0;
+    long starti = 0, stopi = 0;
+    long lsize;
+
+    it = map.find(cmd[1]);
+    if (it == map.end())
+        throw ERROR("*0\r\n");
+    if (it->second.type != Val::LIST)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     
-    (void)cmd;
-    return val;
+    l = static_cast<std::deque<str> *>(it->second.ptr);
+    start = std::stol(cmd[2]);
+    stop = std::stol(cmd[3]);
+    lsize = (long long)l->size();
+
+    if (start < 0)
+        starti = lsize - start;
+    if (stop < 0)
+        stopi = lsize - stop;
+    if (stopi >= lsize)
+        stopi = lsize - 1;
+    if (stopi < starti || starti >= lsize)
+    {
+        stopi = lsize;
+        starti = lsize;
+    }
+    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+    res_buf = "*" + std::to_string(stopi - starti) + "\r\n";
+    for (int i = starti; i <= stopi; i++)
+    {
+        res_buf += "$" + std::to_string((*l)[0].size()) + "\r\n";
+        res_buf += (*l)[0];
+    }
 }
 
 Cache::Cache()

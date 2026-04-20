@@ -258,8 +258,12 @@ void Server::Rpush(int fd)
 
 void Server::Lrange(int fd)
 {
+    Client &cl = clients[fd];
+
     {
         std::lock_guard<std::mutex> lock(mtx);
-        cache.Lrange(clients[fd].cmd);
-    } 
+        cache.Lrange(cl.cmd, cl.req_buff);
+    }
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }

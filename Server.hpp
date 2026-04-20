@@ -84,6 +84,8 @@ struct Client
     }
 };
 
+void make_client_readable(int fd,  int epoll_fd, Client &cl);
+
 class Server
 {
     std::unordered_map <int, Client> clients;
