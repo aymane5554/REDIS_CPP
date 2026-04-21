@@ -112,6 +112,8 @@ void Cache::Set(std::vector<str> &cmd)
     }
     else
     {
+        if (it->second.type != Val::STR)
+            throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         map.erase(it);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
@@ -205,19 +207,21 @@ void Cache::Lpush(std::vector<str> &cmd)
     std::unordered_map <str, Val>::iterator it;
     Val obj;
 
-    it = map.find(cmd[0]);
+    it = map.find(cmd[1]);
     if (it == map.end())
     {
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
-        static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[1]);
+        static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[2]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
     else
     {
-        static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[1]);
+        if (it->second.type != Val::LIST)
+            throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+        static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[2]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -229,19 +233,21 @@ void Cache::Rpush(std::vector<str> &cmd)
     std::unordered_map <str, Val>::iterator it;
     Val obj;
 
-    it = map.find(cmd[0]);
+    it = map.find(cmd[1]);
     if (it == map.end())
     {
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
-        static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[1]);
+        static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[2]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
     }
     else
     {
-        static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[1]);
+        if (it->second.type != Val::LIST)
+            throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+        static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[2]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -257,6 +263,8 @@ void Cache::Lpop(str &key)
     {
         throw ERROR(":0\r\n");
     }
+    if (it->second.type != Val::LIST)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     static_cast<std::deque<str> *>(it->second.ptr)->pop_back();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
@@ -272,6 +280,8 @@ void Cache::Rpop(str &key)
     {
         throw ERROR(":0\r\n");
     }
+    if (it->second.type != Val::LIST)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     static_cast<std::deque<str> *>(it->second.ptr)->pop_front();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
@@ -293,7 +303,6 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     try
     {
-        std::cout << "start = " << cmd[2] << " stop = " << cmd[3] << std::endl;
         start = std::stol(cmd[2]);
         stop = std::stol(cmd[3]);
     }
@@ -320,12 +329,11 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
-    std::cout << "start = " << starti << " stop = " << stopi << std::endl;
-    res_buf = "*" + std::to_string(stopi - starti) + "\r\n";
+    res_buf = "*" + std::to_string((stopi - starti) + 1) + "\r\n";
     for (int i = starti; i <= stopi; i++)
     {
         res_buf += "$" + std::to_string((*l)[i].size()) + "\r\n";
-        res_buf += (*l)[i];
+        res_buf += (*l)[i] + "\r\n";
     }
 }
 

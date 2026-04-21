@@ -15,6 +15,19 @@ bool inserted(std::unordered_map<str, Val> &map, char *key, Val &obj)
     return true;
 }
 
+bool pushed(std::deque<str> *list, char *val)
+{
+    try
+    {
+        list->push_back(val);
+    }
+    catch (std::exception &e)
+    {
+        return false;
+    }
+    return true;
+}
+
 void Cache::Deserialize()
 {
     char buff[8];
@@ -87,13 +100,47 @@ void Cache::Deserialize()
             }
             obj.delete_Val_ptr();
             delete[] value;
-            obj_it = map.find(key);
+            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
             recent_usage.push_back(obj_it->first.c_str());
             obj_it->second.recent_usage_idx = recent_usage.size() - 1;
         }
-        else // type == list
+        else if (obj.type == Val::LIST)
         {
+            char *li_ptr;
+            int li_size;
+            int li_val_len;
 
+            obj.ptr = new (std::nothrow) std::deque<str>;
+            while (obj.ptr == NULL)
+            {
+                LRU();
+                obj.ptr = new (std::nothrow) std::deque<str>;
+            }
+            read(fd, &li_size, 4);
+            for (int li = 0; li < li_size; li++)
+            {
+                read (fd, &li_val_len, 4);
+                li_ptr = new (std::nothrow) char[li_val_len];
+                while (li_ptr == NULL)
+                {
+                    LRU();
+                    li_ptr = new (std::nothrow) char[li_val_len];
+                }
+                read (fd, li_ptr, len);
+                while (!pushed(static_cast<std::deque<str> *>(obj.ptr), li_ptr))
+                {
+                    LRU();
+                }
+                delete[] li_ptr;
+            }
+            while (!inserted(map, key, obj))
+            {
+                LRU();
+            }
+            obj.delete_Val_ptr();
+            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
+            recent_usage.push_back(obj_it->first.c_str());
+            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
         }
         delete[] key;
     }
@@ -135,9 +182,17 @@ void Cache::Serialize()
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
         }
-        else // type == list
+        else if (i->second.type == Val::LIST)
         {
-
+            keys_number = static_cast<std::deque <str> *>(i->second.ptr)->size();
+            write (fd, &keys_number, 4);
+            std::deque<str>::iterator end = static_cast<std::deque <str> *>(i->second.ptr)->end();
+            for (std::deque<str>::iterator li = static_cast<std::deque <str> *>(i->second.ptr)->begin(); li != end; li++)
+            {
+                len = li->length();
+                write (fd, &len, 4);
+                write (fd, li->c_str(), len);
+            }
         }
     }
     close(fd);

@@ -10,12 +10,8 @@
         2. when the limit is reached call LRU
         3. keep track of keys usage
     5. ttl for clients
-    6. ADD LIST type  <-- here
-        LPUSH
-        RPUSH
-        LPOP
-        RPOP
-        LRANGE
+    6. ADD LIST type  
+        serialize list <-- here
     7. Write-Ahead Log                → survive crashes
     8. Snapshotting                   → keep the WAL from growing forever
     9. add checksum to file format
@@ -27,10 +23,15 @@
         [1 byte]   has_ttl flag      0 or 1
         [8 bytes]  expires_at        only if has_ttl == 1
         [1 byte]   type
-        [4 bytes]  key length
-        [N bytes]  key
-        [4 bytes]  value length
-        [N bytes]  value
+            [4 bytes]  key length
+            [N bytes]  key
+            type == LIST
+                [4 bytes]  number of values
+                [4 bytes]  value length
+                [N bytes]  value
+            type == STR
+                [4 bytes]  value length
+                [N bytes]  value
     [8 bytes]  CRC64 checksum <- TODO
 */
 
