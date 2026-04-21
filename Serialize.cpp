@@ -109,7 +109,7 @@ void Cache::Deserialize()
             char *li_ptr;
             int li_size;
             int li_val_len;
-
+            
             obj.ptr = new (std::nothrow) std::deque<str>;
             while (obj.ptr == NULL)
             {
@@ -120,13 +120,14 @@ void Cache::Deserialize()
             for (int li = 0; li < li_size; li++)
             {
                 read (fd, &li_val_len, 4);
-                li_ptr = new (std::nothrow) char[li_val_len];
+                li_ptr = new (std::nothrow) char[li_val_len + 1];
                 while (li_ptr == NULL)
                 {
                     LRU();
-                    li_ptr = new (std::nothrow) char[li_val_len];
+                    li_ptr = new (std::nothrow) char[li_val_len + 1];
                 }
-                read (fd, li_ptr, len);
+                read (fd, li_ptr, li_val_len);
+                li_ptr[li_val_len] = '\0';
                 while (!pushed(static_cast<std::deque<str> *>(obj.ptr), li_ptr))
                 {
                     LRU();
