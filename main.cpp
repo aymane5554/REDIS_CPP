@@ -2,18 +2,14 @@
 
 /*
     Plan:
-    1. HashMap + GET/SET/DEL          DONE
-    2. TTL + expiry                   DONE
-    3. Serialization and Deserialization DONE
-    4. LRU eviction                   → cap memory usage IN PROGRESS
-        1. limit memory by size example 16mb
-        2. when the limit is reached call LRU
-        3. keep track of keys usage
-    5. ttl for clients
-    6. ADD LIST type  
-        serialize list <-- here
-    7. Write-Ahead Log                → survive crashes
-    8. Snapshotting                   → keep the WAL from growing forever
+    1. HashMap + GET/SET/DEL                DONE
+    2. TTL + expiry                         DONE
+    3. Serialization and Deserialization    DONE
+    4. LRU eviction                         DONE
+    5. ttl for clients                      DONE
+    6. ADD LIST type                        DONE
+    7. Write-Ahead Log
+    8. Snapshotting→ stops the WAL from growing forever
     9. add checksum to file format
 
     costum.db file format
