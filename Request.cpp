@@ -70,11 +70,10 @@ void Server::parse_request(int fd)
     Client &client = clients[fd];
 
     len = recv(fd, buff, BUF_SIZE, MSG_NOSIGNAL);
-    if (len <= 0)
-    {
-        safe_close(fd);
-        return ;
-    }
+    if (len == -1)
+        return;
+    if (len == 0)
+        return safe_close(fd);
     client.req_buff.append(buff, len);
     if (client.req_buff.find("\r\n") == str::npos)
         return;

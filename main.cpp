@@ -28,7 +28,7 @@
             type == STR
                 [4 bytes]  value length
                 [N bytes]  value
-    [8 bytes]  CRC64 checksum <- TODO
+    [8 bytes] CRC64 checksum
 */
 
 std::atomic<bool> sigint;
