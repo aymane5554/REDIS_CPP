@@ -71,7 +71,11 @@ void Server::parse_request(int fd)
 
     len = recv(fd, buff, BUF_SIZE, MSG_NOSIGNAL);
     if (len == -1)
+    {
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+            safe_close(fd);
         return;
+    }
     if (len == 0)
         return safe_close(fd);
     client.req_buff.append(buff, len);
