@@ -1,17 +1,6 @@
 #include "Server.hpp"
 
 /*
-    Plan:
-    1. HashMap + GET/SET/DEL                DONE
-    2. TTL + expiry                         DONE
-    3. Serialization and Deserialization    DONE
-    4. LRU eviction                         DONE
-    5. ttl for clients                      DONE
-    6. ADD LIST type                        DONE
-    7. Write-Ahead Log                      HERE
-    8. Snapshotting→ stops the WAL from growing forever
-    9. add checksum to file format
-
     costum.db file format
     [8 bytes]  magic number          0FTREDIS
     [4 bytes]  number of keys
