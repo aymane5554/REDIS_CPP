@@ -142,6 +142,7 @@ void Server::run()
             if (!serializer_pid)
             {
                 this->cache.Serialize();
+                unlink(WAL_FILE);
                 exit(0);
             }
             else if (serializer_pid == -1)
@@ -156,6 +157,7 @@ void Server::run()
     lock.lock();
     this->cache.Serialize();
     lock.unlock();
+    unlink(WAL_FILE);
 };
 
 Server::Server()

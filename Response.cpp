@@ -41,6 +41,8 @@ void Server::send_response(int fd)
     }
     if (cmd_func.find(cmd[0]) != cmd_func.end())
     {
+        if (cmd[0][0] == 'S' || cmd[0][0] == 'D' || cmd[0][1] == 'P' || cmd[0][2] == 'P' || cmd[0][0] == 'F')
+            Wal(cmd);
         (this->*cmd_func[cmd[0]])(fd);
     }
     else

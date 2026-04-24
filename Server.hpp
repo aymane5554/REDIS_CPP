@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <list>
 #include <exception>
@@ -23,6 +24,7 @@
 #include "Cache.hpp"
 
 #define DB_FILE     "costum.db"
+#define WAL_FILE     "wal.log"
 #define PORT        8080
 #define MAX_EVENTS  64
 #define BUF_SIZE    4096
@@ -115,6 +117,8 @@ class Server
         void Rpop(int fd);
         void Lrange(int fd);
         void ttl_thread();
+        int Wal(std::vector <str> &cmd);
+        int read_wal();
         Server();
         ~Server();
 };

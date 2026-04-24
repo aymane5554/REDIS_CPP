@@ -8,7 +8,7 @@
     4. LRU eviction                         DONE
     5. ttl for clients                      DONE
     6. ADD LIST type                        DONE
-    7. Write-Ahead Log
+    7. Write-Ahead Log                      HERE
     8. Snapshotting→ stops the WAL from growing forever
     9. add checksum to file format
 
