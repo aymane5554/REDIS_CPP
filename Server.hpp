@@ -35,7 +35,7 @@
 
 extern std::atomic<bool> sigint;
 
-class ERROR:std::exception
+class ERROR: public std::exception
 {
     private:
         std::string msg;
@@ -118,7 +118,7 @@ class Server
         void Lrange(int fd);
         void ttl_thread();
         int Wal(std::vector <str> &cmd);
-        int read_wal();
+        void read_wal();
         Server();
         ~Server();
 };

@@ -44,6 +44,15 @@ void Server::run()
     ttl.detach();
     signal(SIGINT, sigint_handler);
     cache.Deserialize();
+    try
+    {
+        read_wal();   
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        exit(1);
+    }
     while (!sigint)
     {
         int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
