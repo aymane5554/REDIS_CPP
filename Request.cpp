@@ -12,27 +12,27 @@ void lines(str &req_buff, std::vector<str> &cmd, int &lines, int &bytes)
     {
         indx = req_buff.find("\r\n", start);
         if (req_buff[0] != '*')
-            throw std::runtime_error("line length");
+            throw ERROR("missing number of lines");
         try
         {
             lines = std::stoi(req_buff.substr(1), &end);
         }
         catch(const std::exception& e)
         {
-            throw std::runtime_error("parsing lines number");
+            throw ERROR("missing number of lines");
         }
         if (lines < 0 || req_buff.substr(end + 1, 2) != "\r\n")
-            throw std::runtime_error("line length unvalid number");
+            throw ERROR("unvalid number of lines");
         start = indx + 2;
     }
     indx = req_buff.find("\r\n", start);
-    while (indx != str::npos)
+    while (indx != str::npos && cmd.size() != (size_t)lines)
     {
         line = req_buff.substr(start, indx - start);
         if (line[0] != '$')
         {
-            if ((int)line.size() != bytes)
-                throw std::runtime_error("missing bytes length");
+            if (line.size() != (size_t)bytes)
+                throw ERROR("missing length");
             cmd.push_back(line);
             bytes = -1;
         }
@@ -44,10 +44,10 @@ void lines(str &req_buff, std::vector<str> &cmd, int &lines, int &bytes)
             }
             catch (const std::exception& e)
             {
-                throw std::runtime_error("parsing bytes number");
+                throw ERROR("unvalid length");
             }
             if (bytes < 0 || line[end + 1])
-                throw std::runtime_error("unvalid bytes number");
+                throw ERROR("unvalid length");
         }
         start = indx + 2;
         indx = req_buff.find("\r\n", start);

@@ -1,17 +1,20 @@
 #!/usr/bin/python3
 import socket
 import sys
-import random
 
 HOST = '127.0.0.1'
 PORT = 8080
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def Lpush(key, value):
-    message = f"*3\r\n$5\r\nLPUSH\r\n${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
+def Lpush(key, *value):
+    message = f"*{len(value) + 2}\r\n$5\r\nLPUSH\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    for v in value:
+        message += f"${len(v)}\r\n{v}\r\n".encode('utf-8')
+        print(v)
+    print(message)
     s.send(message)
     data = s.recv(1024)
-    print(f"LPUSH {key} {value} {data.decode('utf-8')}")
+    print(f"LPUSH {key} {data.decode('utf-8')}")
     return data
 
 def Lrange(key, start, stop):
@@ -111,9 +114,14 @@ def main():
     fn, params = DISPATCH[cmd]
     args = sys.argv[2:]
 
-    if len(args) != len(params):
-        print(f"'{cmd}' expects {len(params)} arg(s): {' '.join(params)}")
-        sys.exit(1)
+    if cmd == "lpush":
+        if len(args) < len(params):
+            print(f"'{cmd}' expects {len(params)} arg(s): {' '.join(params)}")
+            sys.exit(1)
+    else:
+        if len(args) != len(params):
+            print(f"'{cmd}' expects {len(params)} arg(s): {' '.join(params)}")
+            sys.exit(1)
 
     if cmd == "expire":
         args[1] = int(args[1])

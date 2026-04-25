@@ -222,7 +222,7 @@ void Server::Lpush(int fd)
 {
     Client &cl = clients[fd];
 
-    if (clients[fd].cmd.size() != 3)
+    if (clients[fd].cmd.size() < 3)
     {
         throw ERROR("-ERR unvalid number of argument\r\n");
     }
@@ -241,7 +241,7 @@ void Server::Rpush(int fd)
 {
     Client &cl = clients[fd];
 
-    if (clients[fd].cmd.size() != 3)
+    if (clients[fd].cmd.size() < 3)
     {
         throw ERROR("-ERR unvalid number of argument\r\n");
     }

@@ -131,8 +131,6 @@ Supported commands:
 Important implementation notes:
 - Wrong type access returns `-WRONGTYPE ...`.
 - Missing keys commonly return Redis-like null/integer forms (`$-1`, `:0`, `:-2`, or `*0`).
-- `TTL` currently returns the stored expiration timestamp value (not remaining seconds).
-- `LPUSH`/`RPUSH` semantics are implemented with opposite deque ends compared to canonical Redis naming.
 
 ## Durability And Recovery
 
@@ -214,8 +212,7 @@ python3 tester.py lrange tasks 0 10
 
 ## Known Gaps / Next Engineering Steps
 
-- Add snapshot checksum/CRC validation and corruption handling.
-- Normalize Redis compatibility for TTL and list push direction semantics.
+- Add snapshot checksum/CRCn validation and corruption handlig.
 - Harden parser and command validation with fuzz/property tests.
 - Add integration tests for restart/crash-recovery scenarios.
 - Expose runtime configuration (port, memory, intervals) via CLI/env.

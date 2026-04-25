@@ -193,7 +193,7 @@ long long Cache::Ttl(str &Key)
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
-    return it->second.seconds;
+    return std::time(NULL) -  it->second.seconds;
 }
 
 void Cache::Flush()
@@ -212,7 +212,8 @@ void Cache::Lpush(std::vector<str> &cmd)
     {
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
-        static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[2]);
+        for (size_t i = 2; i < cmd.size(); i++)
+            static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -221,7 +222,8 @@ void Cache::Lpush(std::vector<str> &cmd)
     {
         if (it->second.type != Val::LIST)
             throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-        static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[2]);
+        for (size_t i = 2; i < cmd.size(); i++)
+            static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[i]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -238,7 +240,8 @@ void Cache::Rpush(std::vector<str> &cmd)
     {
         obj.type = Val::LIST;
         obj.ptr = new std::deque<str>;
-        static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[2]);
+        for (size_t i = 2; i < cmd.size(); i++)
+            static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -247,7 +250,8 @@ void Cache::Rpush(std::vector<str> &cmd)
     {
         if (it->second.type != Val::LIST)
             throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-        static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[2]);
+        for (size_t i = 2; i < cmd.size(); i++)
+            static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[i]);
         recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
         recent_usage.push_back(it->first.c_str());
         it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -265,7 +269,7 @@ void Cache::Lpop(str &key)
     }
     if (it->second.type != Val::LIST)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    static_cast<std::deque<str> *>(it->second.ptr)->pop_back();
+    static_cast<std::deque<str> *>(it->second.ptr)->pop_front();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
@@ -282,7 +286,7 @@ void Cache::Rpop(str &key)
     }
     if (it->second.type != Val::LIST)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    static_cast<std::deque<str> *>(it->second.ptr)->pop_front();
+    static_cast<std::deque<str> *>(it->second.ptr)->pop_back();
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;

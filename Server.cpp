@@ -43,7 +43,10 @@ void Server::run()
 
     ttl.detach();
     signal(SIGINT, sigint_handler);
-    cache.Deserialize();
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Deserialize();
+    }
     try
     {
         read_wal();   
