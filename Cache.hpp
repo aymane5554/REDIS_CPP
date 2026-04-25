@@ -50,8 +50,8 @@ class Cache
         void Flush();
         str Type(str &Key);
         void check_expired_values();
-        void Serialize();
-        void Deserialize();
+        void Serialize(const str &db_file);
+        void Deserialize(const str &db_file);
         void LRU();
         Cache();
         ~Cache();

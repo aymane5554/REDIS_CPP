@@ -26,7 +26,7 @@ void Server::ttl_thread()
     std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
     while (!sigint)
     {
-        sleep(TTL_SLEEP_TIME);
+        sleep(config.ttl_sweep_seconds);
         lock.lock();
         cache.check_expired_values();
         lock.unlock();
@@ -45,7 +45,7 @@ void Server::run()
     signal(SIGINT, sigint_handler);
     {
         std::lock_guard<std::mutex> lock(mtx);
-        cache.Deserialize();
+        cache.Deserialize(config.db_file);
     }
     try
     {
@@ -137,7 +137,7 @@ void Server::run()
         time_t now = time(NULL);
         for (auto it = clients.begin(); it != clients.end(); )
         {
-            if (now - it->second.last_active_time_s >= TIMEOUT)
+            if (now - it->second.last_active_time_s >= config.client_timeout_seconds)
             {
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second.fd, NULL);
                 close(it->second.fd);
@@ -146,15 +146,15 @@ void Server::run()
             }
             ++it;
         }
-        if (std::time(NULL) - last_serialization >= SERIALIZE_TIME)
+        if (std::time(NULL) - last_serialization >= config.snapshot_seconds)
         {
             if (serializer_pid != -1)
                 waitpid(serializer_pid, NULL, 0);
             serializer_pid = fork();
             if (!serializer_pid)
             {
-                this->cache.Serialize();
-                unlink(WAL_FILE);
+                this->cache.Serialize(config.db_file);
+                unlink(config.wal_file.c_str());
                 exit(0);
             }
             else if (serializer_pid == -1)
@@ -167,12 +167,12 @@ void Server::run()
     if (serializer_pid != -1)
         waitpid(serializer_pid, NULL, 0);
     lock.lock();
-    this->cache.Serialize();
+    this->cache.Serialize(config.db_file);
     lock.unlock();
-    unlink(WAL_FILE);
+    unlink(config.wal_file.c_str());
 };
 
-Server::Server()
+Server::Server(const RuntimeConfig &cfg): config(cfg)
 {
     struct epoll_event ev;
     std::cout << "Server Init..." << std::endl;
@@ -182,12 +182,12 @@ Server::Server()
     struct sockaddr_in addr;
     addr.sin_family      = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port        = htons(PORT);
+    addr.sin_port        = htons(config.port);
     bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
     listen(server_fd, SOMAXCONN);
     set_nonblocking(server_fd);
 
-    std::cout << "Listening on port" << PORT << std::endl;
+    std::cout << "Listening on port " << config.port << std::endl;
     epoll_fd = epoll_create1(0);
     ev.events  = EPOLLIN;
     ev.data.fd = server_fd;

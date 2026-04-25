@@ -35,12 +35,30 @@ Run:
 ./redihh
 ```
 
+Run with custom runtime configuration:
+
+```bash
+./redihh --port 9090 --memory-mb 64 --ttl-interval 15 --snapshot-interval 20 --client-timeout 30 --db-file ./my.db --wal-file ./my.wal
+```
+
+CLI options:
+- `--port <1-65535>`: listening TCP port
+- `--memory-mb <positive-int>`: process address-space cap in MB (`RLIMIT_AS`)
+- `--ttl-interval <seconds>`: expired-key cleanup interval
+- `--snapshot-interval <seconds>`: full snapshot interval
+- `--client-timeout <seconds>`: idle client disconnect timeout
+- `--db-file <path>`: snapshot database file path
+- `--wal-file <path>`: write-ahead log file path
+- `--help`: print usage
+
 Defaults:
 - Port: `8080`
 - Address-space limit: `16 MB` (`RLIMIT_AS`)
 - TTL sweep period: `60s`
 - Snapshot period: `30s`
 - Client idle timeout: `10s`
+- Snapshot file path: `costum.db`
+- WAL file path: `wal.log`
 
 ## High-Level Architecture
 
@@ -215,5 +233,4 @@ python3 tester.py lrange tasks 0 10
 - Add snapshot checksum/CRCn validation and corruption handlig.
 - Harden parser and command validation with fuzz/property tests.
 - Add integration tests for restart/crash-recovery scenarios.
-- Expose runtime configuration (port, memory, intervals) via CLI/env.
 - Add metrics (latency, ops/sec, evictions, active clients).

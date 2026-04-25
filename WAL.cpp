@@ -3,7 +3,7 @@
 int Server::Wal(std::vector <str> &cmd)
 {
     str lines;
-    int fd = open(WAL_FILE, O_CREAT | O_APPEND | O_WRONLY, 0777);
+    int fd = open(config.wal_file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0777);
     if (fd == -1)
         return -1;
     lines = std::to_string(cmd.size());
@@ -27,7 +27,7 @@ void Server::read_wal()
     size_t start = 0;
     size_t end;
     ssize_t r;
-    int fd = open(WAL_FILE, O_RDONLY);
+    int fd = open(config.wal_file.c_str(), O_RDONLY);
 
     std::cout << "Reading WAL..." << std::endl;
     if (fd == -1)

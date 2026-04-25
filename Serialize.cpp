@@ -28,7 +28,7 @@ bool pushed(std::deque<str> *list, char *val)
     return true;
 }
 
-void Cache::Deserialize()
+void Cache::Deserialize(const str &db_file)
 {
     char buff[8];
     const char *buff2 = "\x00\x46\x54\x52\x45\x44\x49\x53";
@@ -43,12 +43,12 @@ void Cache::Deserialize()
     std::unordered_map<str, Val>::iterator obj_it;
 
     std::cout << "Deserialize" << std::endl;
-    if (access(DB_FILE, F_OK))
+    if (access(db_file.c_str(), F_OK))
     {
         std::cout << "costumd.db does not exist" << std::endl;
         return;
     }
-    fd = open(DB_FILE, O_RDONLY);
+    fd = open(db_file.c_str(), O_RDONLY);
     if (fd < 0)
     {
         perror("Serialization Failed");
@@ -149,10 +149,10 @@ void Cache::Deserialize()
     std::cout << "End of Deserialization" << std::endl;
 }
 
-void Cache::Serialize()
+void Cache::Serialize(const str &db_file)
 {
     std::cout << "Serialize" << std::endl;
-    int fd = open(DB_FILE, O_CREAT | O_TRUNC | O_RDWR, 0777);
+    int fd = open(db_file.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0777);
     if (fd < 0)
     {
         perror("Serialization Failed");
