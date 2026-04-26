@@ -10,11 +10,18 @@ def Lpush(key, *value):
     message = f"*{len(value) + 2}\r\n$5\r\nLPUSH\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
     for v in value:
         message += f"${len(v)}\r\n{v}\r\n".encode('utf-8')
-        print(v)
-    print(message)
     s.send(message)
     data = s.recv(1024)
     print(f"LPUSH {key} {data.decode('utf-8')}")
+    return data
+
+def Rpush(key, *value):
+    message = f"*{len(value) + 2}\r\n$5\r\nRPUSH\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    for v in value:
+        message += f"${len(v)}\r\n{v}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"RPUSH {key} {data.decode('utf-8')}")
     return data
 
 def Lrange(key, start, stop):
@@ -55,6 +62,18 @@ def Del(key):
     data = s.recv(1024)
     print(f"DEL {key} {data.decode('utf-8')}")
 
+def Lpop(key):
+    message = f"*2\r\n$4\r\nLPOP\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"LPOP {key} {data.decode('utf-8')}")
+
+def Rpop(key):
+    message = f"*2\r\n$4\r\nRPOP\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"RPOP {key} {data.decode('utf-8')}")
+
 def Exists(key):
     message = f"*2\r\n$6\r\nEXISTS\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
     s.send(message)
@@ -83,6 +102,10 @@ Commands:
   ttl    <key>
   del    <key>
   exists <key>
+  lpush  <key> <values>
+  rpush  <key> <values>
+  lpop   <key>
+  rpop   <key>
   flush
   lru
 """
@@ -93,9 +116,12 @@ DISPATCH = {
     "expire": (Expire, ["key", "seconds"]),
     "ttl":    (TTL,    ["key"]),
     "del":    (Del,    ["key"]),
+    "lpop":    (Lpop,    ["key"]),
+    "rpop":    (Rpop,    ["key"]),
     "exists": (Exists, ["key"]),
     "flush":  (Flush,  []),
     "lpush": (Lpush, ["key", "value"]),
+    "rpush": (Rpush, ["key", "value"]),
     "lrange": (Lrange, ["key", "start", "stop"]),
     "lru":  (Lru,  []),
 }

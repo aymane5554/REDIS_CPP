@@ -19,7 +19,7 @@ void lines(str &req_buff, std::vector<str> &cmd, int &lines, int &bytes)
         }
         catch(const std::exception& e)
         {
-            throw ERROR("missing number of lines");
+            throw ERROR("unvalid number of lines");
         }
         if (lines < 0 || req_buff.substr(end + 1, 2) != "\r\n")
             throw ERROR("unvalid number of lines");
@@ -83,6 +83,6 @@ void Server::parse_request(int fd)
         return;
     lines(client.req_buff, client.cmd, client.lines, client.bytes);
     client.req_buff = client.req_buff.substr(client.req_buff.find_last_of("\r\n") + 1);
-    if (client.lines == (int)client.cmd.size())
+    if ((size_t)client.lines == client.cmd.size())
         make_client_writable(fd, epoll_fd);
 }

@@ -62,10 +62,10 @@ void Server::read_wal()
         size_t argc;
         str first_arg;
         std::vector<str> cmd;
-        char *endptr;
+        size_t end_index;
 
-        argc = std::strtoul(tokens[i].c_str(), &endptr, 10);
-        if (*endptr != '\0' || argc == 0)
+        argc = std::stoul(tokens[i].c_str(), &end_index, 10);
+        if (tokens[i][end_index] != '\0' || argc == 0)
             throw std::runtime_error("Invalid WAL format");
         ++i;
         while (cmd.size() < argc && i < tokens.size())
@@ -91,8 +91,8 @@ void Server::read_wal()
             cache.Flush();
         else if (cmd[0] == "EXPIRE" && cmd.size() == 3)
         {
-            size_t seconds = std::strtoull(cmd[2].c_str(), &endptr, 10);
-            if (*endptr != '\0')
+            size_t seconds = std::stoull(cmd[2].c_str(), &end_index, 10);
+            if (cmd[2][end_index] != '\0')
                 throw std::runtime_error("Invalid WAL format");
             cache.Expire(cmd[1], seconds);
         }
