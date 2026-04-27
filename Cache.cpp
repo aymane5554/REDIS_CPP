@@ -9,6 +9,9 @@ Val::Val()
 
 Val::Val(const Val &obj)
 {
+    ptr = NULL;
+    seconds = -1;
+    type = NONE;
     new_Val_ptr(obj);
     copy_Val_ptr(obj);
     this->seconds = obj.seconds;
@@ -17,10 +20,13 @@ Val::Val(const Val &obj)
 
 Val &Val::operator=(const Val &obj)
 {
-    new_Val_ptr(obj);
-    copy_Val_ptr(obj);
+    if (this == &obj)
+        return *this;
+    delete_Val_ptr();
     this->seconds = obj.seconds;
     this->type = obj.type;
+    new_Val_ptr(obj);
+    copy_Val_ptr(obj);
     return *this;
 }
 
@@ -37,6 +43,10 @@ void Val::delete_Val_ptr()
     {
         delete static_cast<str *>(ptr);
     }
+    else if (type == Val::HASH)
+    {
+        delete static_cast<std::unordered_map<str, str> *>(ptr);
+    }
     else if (type == Val::LIST)
     {
         delete static_cast<std::deque<str> *>(ptr);
@@ -51,17 +61,31 @@ void Val::new_Val_ptr(const Val &obj)
     {
         this->ptr = new str;
     }
+    else if (obj.type == Val::HASH)
+    {
+        this->ptr = new std::unordered_map<str, str>;
+    }
     else if (obj.type == Val::LIST)
     {
         this->ptr = new std::deque<str>;
+    }
+    else
+    {
+        this->ptr = NULL;
     }
 }
 
 void Val::copy_Val_ptr(const Val &obj)
 {
+    if (obj.ptr == NULL)
+        return;
     if (obj.type == Val::STR)
     {
         *static_cast<str *>(this->ptr) = *static_cast<str *>(obj.ptr);
+    }
+    else if (obj.type == Val::HASH)
+    {
+        *static_cast<std::unordered_map<str, str> *>(this->ptr) = *static_cast<std::unordered_map<str, str> *>(obj.ptr);
     }
     else if (obj.type == Val::LIST)
         *static_cast<std::deque<str> *>(this->ptr) = *static_cast<std::deque<str> *>(obj.ptr); 
@@ -93,7 +117,114 @@ str Cache::Type(str &Key)
     it->second.recent_usage_idx = recent_usage.size() - 1;
     if (it->second.type == Val::STR)
         return "+string\r\n";
+    if (it->second.type == Val::HASH)
+        return "+hash\r\n";
     return "+list\r\n";
+}
+
+long long Cache::Hset(std::vector<str> &cmd)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(cmd[1]);
+    if (it == map.end())
+    {
+        Val obj;
+        std::unordered_map<str, str> *h;
+
+        obj.type = Val::HASH;
+        obj.ptr = new std::unordered_map<str, str>;
+        h = static_cast<std::unordered_map<str, str> *>(obj.ptr);
+        (*h)[cmd[2]] = cmd[3];
+        it = map.insert(std::make_pair(cmd[1], obj)).first;
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+        return 1;
+    }
+    if (it->second.type != Val::HASH)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+    std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(it->second.ptr);
+    bool is_new_field = (h->find(cmd[2]) == h->end());
+    (*h)[cmd[2]] = cmd[3];
+    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+    return is_new_field ? 1 : 0;
+}
+
+str Cache::Hget(std::vector<str> &cmd)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(cmd[1]);
+    if (it == map.end())
+        throw ERROR("$-1\r\n");
+    if (it->second.type != Val::HASH)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+    std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(it->second.ptr);
+    std::unordered_map<str, str>::iterator field_it = h->find(cmd[2]);
+    if (field_it == h->end())
+        throw ERROR("$-1\r\n");
+    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+    return field_it->second;
+}
+
+void Cache::Hgetall(str &key, str &res_buf)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(key);
+    if (it == map.end())
+        throw ERROR("*0\r\n");
+    if (it->second.type != Val::HASH)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+    std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(it->second.ptr);
+    res_buf = "*" + std::to_string(h->size() * 2) + "\r\n";
+    for (std::unordered_map<str, str>::iterator field_it = h->begin(); field_it != h->end(); ++field_it)
+    {
+        res_buf += "$" + std::to_string(field_it->first.size()) + "\r\n";
+        res_buf += field_it->first + "\r\n";
+        res_buf += "$" + std::to_string(field_it->second.size()) + "\r\n";
+        res_buf += field_it->second + "\r\n";
+    }
+    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+    recent_usage.push_back(it->first.c_str());
+    it->second.recent_usage_idx = recent_usage.size() - 1;
+}
+
+long long Cache::Hdel(std::vector<str> &cmd)
+{
+    std::unordered_map <str, Val>::iterator it;
+
+    it = map.find(cmd[1]);
+    if (it == map.end())
+        return 0;
+    if (it->second.type != Val::HASH)
+        throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
+    std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(it->second.ptr);
+    std::unordered_map<str, str>::iterator field_it = h->find(cmd[2]);
+    if (field_it == h->end())
+    {
+        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+        return 0;
+    }
+    h->erase(field_it);
+    if (h->empty())
+    {
+        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+        map.erase(it);
+    }
+    else
+    {
+        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+        recent_usage.push_back(it->first.c_str());
+        it->second.recent_usage_idx = recent_usage.size() - 1;
+    }
+    return 1;
 }
 
 void Cache::Set(std::vector<str> &cmd)

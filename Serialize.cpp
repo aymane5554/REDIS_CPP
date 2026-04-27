@@ -28,6 +28,19 @@ bool pushed(std::deque<str> *list, char *val)
     return true;
 }
 
+bool hashed(std::unordered_map<str, str> *hash, char *field, char *value)
+{
+    try
+    {
+        (*hash)[field] = value;
+    }
+    catch (std::exception &e)
+    {
+        return false;
+    }
+    return true;
+}
+
 void Cache::Deserialize(const str &db_file)
 {
     char buff[8];
@@ -64,6 +77,7 @@ void Cache::Deserialize(const str &db_file)
     read(fd, &keys_num, 4);
     for (int i = 0; i < keys_num; i++)
     {
+        obj.seconds = -1;
         read(fd, &is_ttl, 1);
         if (is_ttl)
             read(fd, &obj.seconds, 8);
@@ -143,6 +157,58 @@ void Cache::Deserialize(const str &db_file)
             recent_usage.push_back(obj_it->first.c_str());
             obj_it->second.recent_usage_idx = recent_usage.size() - 1;
         }
+        else if (obj.type == Val::HASH)
+        {
+            int fields_size;
+            int field_len;
+            int value_len;
+            char *field_ptr;
+            char *value_ptr;
+
+            obj.ptr = new (std::nothrow) std::unordered_map<str, str>;
+            while (obj.ptr == NULL)
+            {
+                LRU();
+                obj.ptr = new (std::nothrow) std::unordered_map<str, str>;
+            }
+            read(fd, &fields_size, 4);
+            for (int h = 0; h < fields_size; h++)
+            {
+                read(fd, &field_len, 4);
+                field_ptr = new (std::nothrow) char[field_len + 1];
+                while (field_ptr == NULL)
+                {
+                    LRU();
+                    field_ptr = new (std::nothrow) char[field_len + 1];
+                }
+                read(fd, field_ptr, field_len);
+                field_ptr[field_len] = '\0';
+
+                read(fd, &value_len, 4);
+                value_ptr = new (std::nothrow) char[value_len + 1];
+                while (value_ptr == NULL)
+                {
+                    LRU();
+                    value_ptr = new (std::nothrow) char[value_len + 1];
+                }
+                read(fd, value_ptr, value_len);
+                value_ptr[value_len] = '\0';
+                while (!hashed(static_cast<std::unordered_map<str, str> *>(obj.ptr), field_ptr, value_ptr))
+                {
+                    LRU();
+                }
+                delete[] field_ptr;
+                delete[] value_ptr;
+            }
+            while (!inserted(map, key, obj))
+            {
+                LRU();
+            }
+            obj.delete_Val_ptr();
+            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
+            recent_usage.push_back(obj_it->first.c_str());
+            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
+        }
         delete[] key;
     }
     close(fd);
@@ -193,6 +259,21 @@ void Cache::Serialize(const str &db_file)
                 len = li->length();
                 write (fd, &len, 4);
                 write (fd, li->c_str(), len);
+            }
+        }
+        else if (i->second.type == Val::HASH)
+        {
+            std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(i->second.ptr);
+            keys_number = h->size();
+            write(fd, &keys_number, 4);
+            for (std::unordered_map<str, str>::iterator hit = h->begin(); hit != h->end(); ++hit)
+            {
+                len = hit->first.length();
+                write(fd, &len, 4);
+                write(fd, hit->first.c_str(), len);
+                len = hit->second.length();
+                write(fd, &len, 4);
+                write(fd, hit->second.c_str(), len);
             }
         }
     }

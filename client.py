@@ -31,6 +31,34 @@ def Lrange(key, start, stop):
     print(f"Lrange {key} {data.decode('utf-8')}")
     return data
 
+def Hset(key, field, value):
+    message = f"*4\r\n$4\r\nHSET\r\n${len(key)}\r\n{key}\r\n${len(field)}\r\n{field}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"HSET {key} {field} {data.decode('utf-8')}")
+    return data
+
+def Hget(key, field):
+    message = f"*3\r\n$4\r\nHGET\r\n${len(key)}\r\n{key}\r\n${len(field)}\r\n{field}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"HGET {key} {field} {data.decode('utf-8')}")
+    return data
+
+def Hgetall(key):
+    message = f"*2\r\n$7\r\nHGETALL\r\n${len(key)}\r\n{key}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"HGETALL {key} {data.decode('utf-8')}")
+    return data
+
+def Hdel(key, field):
+    message = f"*3\r\n$4\r\nHDEL\r\n${len(key)}\r\n{key}\r\n${len(field)}\r\n{field}\r\n".encode('utf-8')
+    s.send(message)
+    data = s.recv(1024)
+    print(f"HDEL {key} {field} {data.decode('utf-8')}")
+    return data
+
 def Set(key, value):
     message = f"*3\r\n$3\r\nSET\r\n${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n".encode('utf-8')
     s.send(message)
@@ -108,6 +136,10 @@ Commands:
   rpop   <key>
   flush
   lru
+    hset   <key> <field> <value>
+    hget   <key> <field>
+    hgetall <key>
+    hdel   <key> <field>
 """
 
 DISPATCH = {
@@ -124,6 +156,10 @@ DISPATCH = {
     "rpush": (Rpush, ["key", "value"]),
     "lrange": (Lrange, ["key", "start", "stop"]),
     "lru":  (Lru,  []),
+    "hset": (Hset, ["key", "field", "value"]),
+    "hget": (Hget, ["key", "field"]),
+    "hgetall": (Hgetall, ["key"]),
+    "hdel": (Hdel, ["key", "field"]),
 }
 
 def main():

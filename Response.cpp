@@ -1,5 +1,12 @@
 #include "Server.hpp"
 
+static bool is_mutating_command(const str &cmd)
+{
+    return (cmd == "SET" || cmd == "DEL" || cmd == "LPUSH" || cmd == "RPUSH"
+        || cmd == "LPOP" || cmd == "RPOP" || cmd == "FLUSH" || cmd == "EXPIRE"
+        || cmd == "HSET" || cmd == "HDEL");
+}
+
 void make_client_readable(int fd,  int epoll_fd, Client &cl)
 {
     epoll_event event;
@@ -41,7 +48,7 @@ void Server::send_response(int fd)
     }
     if (cmd_func.find(cmd[0]) != cmd_func.end())
     {
-        if (cmd[0][0] == 'S' || cmd[0][0] == 'D' || cmd[0][1] == 'P' || cmd[0][2] == 'P' || cmd[0][0] == 'F')
+        if (is_mutating_command(cmd[0]))
             Wal(cmd);
         (this->*cmd_func[cmd[0]])(fd);
     }

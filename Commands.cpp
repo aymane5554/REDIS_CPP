@@ -273,3 +273,74 @@ void Server::Lrange(int fd)
     cl.send = cl.res_buff.length();
     cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
 }
+
+void Server::Hset(int fd)
+{
+    Client &cl = clients[fd];
+    long long inserted;
+
+    if (clients[fd].cmd.size() != 4)
+        throw ERROR("-ERR unvalid number of argument\r\n");
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        inserted = cache.Hset(cl.cmd);
+    }
+
+    cl.res_buff = ":" + std::to_string(inserted) + "\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Hget(int fd)
+{
+    Client &cl = clients[fd];
+    str val;
+
+    if (clients[fd].cmd.size() != 3)
+        throw ERROR("-ERR unvalid number of argument\r\n");
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        val = cache.Hget(cl.cmd);
+    }
+
+    cl.res_buff = "$" + std::to_string(val.size()) + "\r\n";
+    cl.res_buff += val + "\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Hgetall(int fd)
+{
+    Client &cl = clients[fd];
+
+    if (clients[fd].cmd.size() != 2)
+        throw ERROR("-ERR unvalid number of argument\r\n");
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cache.Hgetall(cl.cmd[1], cl.res_buff);
+    }
+
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}
+
+void Server::Hdel(int fd)
+{
+    Client &cl = clients[fd];
+    long long deleted;
+
+    if (clients[fd].cmd.size() != 3)
+        throw ERROR("-ERR unvalid number of argument\r\n");
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        deleted = cache.Hdel(cl.cmd);
+    }
+
+    cl.res_buff = ":" + std::to_string(deleted) + "\r\n";
+    cl.send = cl.res_buff.length();
+    cl.sent = send(fd, cl.res_buff.c_str(), cl.send, MSG_NOSIGNAL);
+}

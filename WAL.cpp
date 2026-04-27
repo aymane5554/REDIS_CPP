@@ -77,6 +77,10 @@ void Server::read_wal()
             throw std::runtime_error("Invalid WAL format");
         if (cmd[0] == "SET" && cmd.size() == 3)
             cache.Set(cmd);
+        else if (cmd[0] == "HSET" && cmd.size() == 4)
+            cache.Hset(cmd);
+        else if (cmd[0] == "HDEL" && cmd.size() == 3)
+            cache.Hdel(cmd);
         else if (cmd[0] == "DEL" && cmd.size() == 2)
             cache.Del(cmd[1]);
         else if (cmd[0] == "LPUSH" && cmd.size() == 3)

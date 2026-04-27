@@ -138,6 +138,10 @@ class Server
         void Lpop(int fd);
         void Rpop(int fd);
         void Lrange(int fd);
+        void Hset(int fd);
+        void Hget(int fd);
+        void Hgetall(int fd);
+        void Hdel(int fd);
         void ttl_thread();
         int Wal(std::vector <str> &cmd);
         void read_wal();

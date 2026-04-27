@@ -145,6 +145,10 @@ Supported commands:
 - `LPOP key`
 - `RPOP key`
 - `LRANGE key start stop`
+- `HSET key field value`
+- `HGET key field`
+- `HGETALL key`
+- `HDEL key field`
 
 Important implementation notes:
 - Wrong type access returns `-WRONGTYPE ...`.
@@ -161,7 +165,7 @@ Important implementation notes:
 - File is `fsync`'d on every append.
 
 Mutating commands persisted:
-- `SET`, `DEL`, `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `EXPIRE`, `FLUSH`
+- `SET`, `DEL`, `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `EXPIRE`, `FLUSH`, `HSET`, `HDEL`
 
 ### Snapshot (`costum.db`)
 
@@ -227,10 +231,3 @@ python3 tester.py lrange tasks 0 10
 - `Serialize.cpp`: snapshot encode/decode
 - `tester.py`: protocol test client
 - `Makefile`: build rules
-
-## Known Gaps / Next Engineering Steps
-
-- Add snapshot checksum/CRCn validation and corruption handlig.
-- Harden parser and command validation with fuzz/property tests.
-- Add integration tests for restart/crash-recovery scenarios.
-- Add metrics (latency, ops/sec, evictions, active clients).

@@ -207,6 +207,10 @@ Server::Server(const RuntimeConfig &cfg): config(cfg)
     cmd_func.insert(std::make_pair("LPUSH", &Server::Lpush));
     cmd_func.insert(std::make_pair("RPUSH", &Server::Rpush));
     cmd_func.insert(std::make_pair("LRANGE", &Server::Lrange));
+    cmd_func.insert(std::make_pair("HSET", &Server::Hset));
+    cmd_func.insert(std::make_pair("HGET", &Server::Hget));
+    cmd_func.insert(std::make_pair("HGETALL", &Server::Hgetall));
+    cmd_func.insert(std::make_pair("HDEL", &Server::Hdel));
 
     last_serialization = std::time(NULL);
 }

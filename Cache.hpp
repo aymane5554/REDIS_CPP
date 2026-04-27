@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <deque>
 #include <string>
+#include <vector>
 
 typedef std::string str;
 
@@ -13,6 +14,7 @@ class Val
     public:
         typedef enum e_type
         {
+            HASH,
             LIST,
             STR,
             NONE
@@ -42,6 +44,10 @@ class Cache
         void Lpop(str &key);
         void Rpop(str &key);
         void Lrange(std::vector<str> &cmd, str &res_buf);
+        long long Hset(std::vector<str> &cmd);
+        str Hget(std::vector<str> &cmd);
+        void Hgetall(str &key, str &res_buf);
+        long long Hdel(std::vector<str> &cmd);
         str Get(str &Key);
         void Del(str &Key);
         bool Exists(str &Key);
