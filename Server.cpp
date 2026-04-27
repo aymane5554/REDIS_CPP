@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-char bad_alloc_res[41] = "-ERR memory limit reached resend request";
+const char bad_alloc_res[55] = "-ERR memory limit reached, please resend the request\r\n";
 
 int set_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
@@ -70,7 +70,7 @@ void Server::run()
                     socklen_t len = sizeof(client_addr);
                     int conn_fd = accept(server_fd, (struct sockaddr*)&client_addr, &len);
                     if (conn_fd == -1) {
-                        perror("accept");
+                        perror("accept failed");
                         continue;
                     }
                     struct   epoll_event client_event;
@@ -159,7 +159,7 @@ void Server::run()
             }
             else if (serializer_pid == -1)
             {
-                perror("fork failed in Serialization");
+                perror("fork failed during snapshot creation");
             }
             last_serialization = std::time(NULL);
         }
@@ -175,7 +175,7 @@ void Server::run()
 Server::Server(const RuntimeConfig &cfg): config(cfg)
 {
     struct epoll_event ev;
-    std::cout << "Server Init..." << std::endl;
+    std::cout << "Starting KV cache server" << std::endl;
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -217,5 +217,5 @@ Server::Server(const RuntimeConfig &cfg): config(cfg)
 
 Server::~Server()
 {
-    std::cout << "Server Shutdown..." << std::endl;
+    std::cout << "Shutting down KV cache server" << std::endl;
 }

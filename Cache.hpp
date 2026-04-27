@@ -7,7 +7,7 @@
 
 typedef std::string str;
 
-extern char bad_alloc_res[41];
+extern const char bad_alloc_res[55];
 
 class Val
 {
