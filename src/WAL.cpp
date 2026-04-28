@@ -83,9 +83,9 @@ void Server::read_wal()
             cache.Hdel(cmd);
         else if (cmd[0] == "DEL" && cmd.size() == 2)
             cache.Del(cmd[1]);
-        else if (cmd[0] == "LPUSH" && cmd.size() == 3)
+        else if (cmd[0] == "LPUSH" && cmd.size() >= 3)
             cache.Lpush(cmd);
-        else if (cmd[0] == "RPUSH" && cmd.size() == 3)
+        else if (cmd[0] == "RPUSH" && cmd.size() >= 3)
             cache.Rpush(cmd);
         else if (cmd[0] == "LPOP" && cmd.size() == 2)
             cache.Lpop(cmd[1]);

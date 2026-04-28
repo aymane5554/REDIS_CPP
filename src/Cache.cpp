@@ -428,8 +428,8 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
     std::unordered_map <str, Val>::iterator it;
     std::deque<str> *l;
     long start = 0, stop = 0;
-    long starti = 0, stopi = 0;
-    long lsize;
+    size_t starti = 0, stopi = 0;
+    size_t lsize;
 
     it = map.find(cmd[1]);
     if (it == map.end())
@@ -447,25 +447,25 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
     }
 
     l = static_cast<std::deque<str> *>(it->second.ptr);
-    lsize = (long long)l->size();
+    lsize = l->size();
     starti = start;
     stopi = stop;
     if (start < 0)
-        starti = lsize - start;
+        starti = lsize + start;
     if (stop < 0)
-        stopi = lsize - stop;
-    if (stopi >= lsize)
+        stopi = lsize + stop;
+    if ((size_t)stopi >= lsize)
         stopi = lsize - 1;
-    if (stopi < starti || starti >= lsize)
+    if (stopi < starti || (size_t)starti >= lsize)
     {
-        stopi = lsize;
-        starti = lsize;
+        res_buf = "*0\r\n";
+        return ;
     }
     recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
     recent_usage.push_back(it->first.c_str());
     it->second.recent_usage_idx = recent_usage.size() - 1;
     res_buf = "*" + std::to_string((stopi - starti) + 1) + "\r\n";
-    for (int i = starti; i <= stopi; i++)
+    for (size_t i = starti; i <= stopi; i++)
     {
         res_buf += "$" + std::to_string((*l)[i].size()) + "\r\n";
         res_buf += (*l)[i] + "\r\n";
