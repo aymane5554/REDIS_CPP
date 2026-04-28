@@ -8,7 +8,7 @@ This project focuses on systems-level backend concerns: non-blocking I/O, custom
 
 - Non-blocking TCP server using epoll
 - RESP-like request parsing and command dispatch
-- In-memory string and list value types
+- In-memory string list and hashmap value types
 - Key expiration (TTL) with periodic cleanup
 - LRU-style eviction when allocation fails
 - Durability via Write-Ahead Log + periodic snapshots

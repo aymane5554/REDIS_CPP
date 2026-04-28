@@ -3,26 +3,6 @@
 #include <cstdlib>
 #include <limits>
 
-/*
-    costum.db file format
-    [8 bytes]  magic number          0FTREDIS
-    [4 bytes]  number of keys
-    [per key]
-        [1 byte]   has_ttl flag      0 or 1
-        [8 bytes]  expires_at        only if has_ttl == 1
-        [1 byte]   type
-            [4 bytes]  key length
-            [N bytes]  key
-            type == LIST
-                [4 bytes]  number of values
-                [4 bytes]  value length
-                [N bytes]  value
-            type == STR
-                [4 bytes]  value length
-                [N bytes]  value
-    [8 bytes] CRC64 checksum
-*/
-
 std::atomic<bool> sigint;
 
 static void print_usage(const char *bin)

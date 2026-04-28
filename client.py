@@ -136,10 +136,10 @@ Commands:
   rpop   <key>
   flush
   lru
-    hset   <key> <field> <value>
-    hget   <key> <field>
-    hgetall <key>
-    hdel   <key> <field>
+  hset   <key> <field> <value>
+  hget   <key> <field>
+  hgetall <key>
+  hdel   <key> <field>
 """
 
 DISPATCH = {
