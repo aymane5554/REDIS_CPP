@@ -224,12 +224,12 @@ Current layout:
 ## Quick Validation (Tester Client)
 
 ```bash
-python3 tester.py set user:1 aymane
-python3 tester.py get user:1
-python3 tester.py expire user:1 60
-python3 tester.py ttl user:1
-python3 tester.py lpush tasks "finish project"
-python3 tester.py lrange tasks 0 10
+python3 client.py set user:1 aymane
+python3 client.py get user:1
+python3 client.py expire user:1 60
+python3 client.py ttl user:1
+python3 client.py lpush tasks "finish project"
+python3 client.py lrange tasks 0 10
 ```
 
 ---
@@ -245,5 +245,5 @@ python3 tester.py lrange tasks 0 10
 - `LRU.cpp`: eviction primitive
 - `WAL.cpp`: append/replay log
 - `Serialize.cpp`: snapshot encode/decode
-- `tester.py`: protocol test client
+- `client.py`: protocol test client
 - `Makefile`: build rules
