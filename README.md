@@ -39,12 +39,12 @@ make
 
 ### Run
 ```bash
-./redihh
+./redis++
 ```
 
 ### Run with configuration
 ```bash
-./redihh --port 9090 --memory-mb 64 --ttl-interval 15 --snapshot-interval 20 --client-timeout 30 --db-file ./my.db --wal-file ./my.wal
+./redis++ --port 9090 --memory-mb 64 --ttl-interval 15 --snapshot-interval 20 --client-timeout 30 --db-file ./my.db --wal-file ./my.wal
 ```
 
 ### CLI Options
