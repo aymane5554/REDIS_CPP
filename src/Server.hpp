@@ -32,7 +32,7 @@ constexpr int DEFAULT_TTL_SWEEP_SECONDS = 60;
 constexpr int DEFAULT_SNAPSHOT_SECONDS = 30;
 constexpr int DEFAULT_CLIENT_TIMEOUT_SECONDS = 10;
 constexpr std::uint64_t DEFAULT_MEMORY_LIMIT_MB = 16;
-constexpr const char *DEFAULT_DB_FILE = "costum.db";
+constexpr const char *DEFAULT_DB_FILE = "custom.db";
 constexpr const char *DEFAULT_WAL_FILE = "wal.log";
 
 extern std::atomic<bool> sigint;

@@ -63,7 +63,7 @@ make
 - TTL sweep period: `60s`
 - Snapshot period: `30s`
 - Client idle timeout: `10s`
-- Snapshot file path: `costum.db`
+- Snapshot file path: `custom.db`
 - WAL file path: `wal.log`
 
 ---
@@ -97,7 +97,7 @@ make
    - Tracks recency and evicts least-recently-used keys when needed
 
 6. **`Serialize.cpp` + `WAL.cpp`**
-   - Snapshot serialize/deserialize (`costum.db`)
+   - Snapshot serialize/deserialize (`custom.db`)
    - Append-only WAL (`wal.log`) with replay on startup
 
 ---
@@ -181,7 +181,7 @@ Notes:
 Persisted commands:
 `SET`, `DEL`, `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `EXPIRE`, `FLUSH`, `HSET`, `HDEL`
 
-### Snapshot (`costum.db`)
+### Snapshot (`custom.db`)
 Periodically written full-state binary image.
 
 Current layout:
@@ -198,7 +198,7 @@ Current layout:
      - List: 4 bytes element count, then repeated (4 bytes length + bytes)
 
 ### Startup recovery order
-1. Deserialize snapshot from `costum.db` (if present)
+1. Deserialize snapshot from `custom.db` (if present)
 2. Replay `wal.log` entries in order
 
 ---
