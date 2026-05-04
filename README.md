@@ -9,7 +9,7 @@ Implements the full Redis operational model: **RESP2 wire protocol**, **non-bloc
 - **Non-blocking TCP server** using `epoll` — single-process, event-driven, handles multiple concurrent clients without threads
 - **RESP2 protocol** — wire-compatible command framing, same as Redis clients use
 - **Three data types**: Strings, Lists, Hashmaps — each with type-safe access and `-WRONGTYPE` enforcement
-- **TTL / expiry** — lazy expiry on access + periodic background sweeper thread
+- **TTL / expiry** — periodic background sweeper thread
 - **LRU eviction** — doubly linked list + hashmap, O(1) evict on memory pressure detected via `RLIMIT_AS` + `std::bad_alloc`
 - **Write-Ahead Log** — every mutating command is `fsync`'d to disk before the client receives `+OK`
 - **Fork-based snapshots** — child process serializes a consistent binary snapshot using copy-on-write semantics; parent keeps serving writes uninterrupted
