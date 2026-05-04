@@ -1,20 +1,8 @@
 # redis++
 
-A Redis-inspired, persistent key-value server written in **C++ for Linux** — built from scratch as a systems engineering deep-dive.
+A Redis-inspired, persistent key-value server written in **C++ for Linux**
 
 Implements the full Redis operational model: **RESP2 wire protocol**, **non-blocking epoll I/O**, **Write-Ahead Logging**, **fork-based snapshotting**, and **LRU eviction under memory pressure** — without any external dependencies.
-
----
-
-## Why this project exists
-
-Most key-value store tutorials stop at a hash map behind a TCP socket. This one doesn't.
-
-The goal was to understand what makes production systems like Redis actually work: how do you guarantee durability without destroying write throughput? How do you serve thousands of clients on a single thread? How do you take a consistent snapshot of live data without pausing the server?
-
-Every design decision here — epoll over threads, WAL before mutation, fork() for copy-on-write snapshots — was made deliberately and mirrors how Redis itself works under the hood.
-
----
 
 ## What it does
 
