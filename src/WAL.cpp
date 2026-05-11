@@ -1,80 +1,11 @@
 #include "Server.hpp"
 
-int Server::Wal(std::vector <str> &cmd)
+bool Server::exec_wal(std::vector <str> &cmd)
 {
-    str lines;
-    int fd = open(config.wal_file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0777);
-    if (fd == -1)
-        return -1;
-    lines = std::to_string(cmd.size());
-    write(fd, lines.c_str(), lines.size());
-    write(fd, "\r\n", 2);
-    for (size_t i = 0; i < cmd.size(); i++)
-    {
-        write(fd, cmd[i].c_str(), cmd[i].length());
-        write(fd, "\r\n", 2);
-    }
-    fsync(fd);
-    close(fd);
-    return 0;
-}
+    size_t end_index;
 
-void Server::read_wal()
-{
-    char buff[BUF_SIZE];
-    str wal_content;
-    std::vector<str> tokens;
-    size_t start = 0;
-    size_t end;
-    ssize_t r;
-    int fd = open(config.wal_file.c_str(), O_RDONLY);
-
-    std::cout << "Reading WAL..." << std::endl;
-    if (fd == -1)
+    try
     {
-        if (errno == ENOENT)
-        {
-            std::cout << "WAL file not found" << std::endl;
-            return ;
-        }
-        throw std::runtime_error("Failed to open WAL file");
-    }
-    r = read(fd, buff, sizeof(buff));
-    while (r > 0)
-    {
-        wal_content.append(buff, r);
-        r = read(fd, buff, sizeof(buff));
-    }
-    close(fd);
-    if (r < 0)
-        throw std::runtime_error("Failed to read WAL file");
-    while ((end = wal_content.find("\r\n", start)) != str::npos)
-    {
-        tokens.push_back(wal_content.substr(start, end - start));
-        start = end + 2;
-    }
-    if (start != wal_content.size())
-        throw std::runtime_error("Invalid WAL format");
-
-    std::lock_guard<std::mutex> lock(mtx);
-    for (size_t i = 0; i < tokens.size();)
-    {
-        size_t argc;
-        str first_arg;
-        std::vector<str> cmd;
-        size_t end_index;
-
-        argc = std::stoul(tokens[i].c_str(), &end_index, 10);
-        if (tokens[i][end_index] != '\0' || argc == 0)
-            throw std::runtime_error("Invalid WAL format");
-        ++i;
-        while (cmd.size() < argc && i < tokens.size())
-        {
-            cmd.push_back(tokens[i]);
-            ++i;
-        }
-        if (cmd.size() != argc || cmd.empty())
-            throw std::runtime_error("Invalid WAL format");
         if (cmd[0] == "SET" && cmd.size() == 3)
             cache.Set(cmd);
         else if (cmd[0] == "HSET" && cmd.size() == 4)
@@ -103,5 +34,120 @@ void Server::read_wal()
         else
             throw std::runtime_error("Invalid WAL format");
     }
-    std::cout << "WAL loaded successfully" << std::endl;
+    catch (std::bad_alloc)
+    {
+        return false;
+    }
+    return true;
+}
+
+int Server::Wal(std::vector <str> &cmd)
+{
+    str lines;
+    str keys;
+    int fd = open(config.wal_file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0777);
+    if (fd == -1)
+        return -1;
+    lines = "*" + std::to_string(cmd.size());
+    write(fd, lines.c_str(), lines.size());
+    write(fd, "\r\n", 2);
+    for (size_t i = 0; i < cmd.size(); i++)
+    {
+        keys = "$" + std::to_string(cmd[i].size());
+        write(fd, keys.c_str(), keys.size());
+        write(fd, "\r\n", 2);
+        write(fd, cmd[i].c_str(), cmd[i].length());
+        write(fd, "\r\n", 2);
+    }
+    fsync(fd);
+    close(fd);
+    return 0;
+}
+
+void Server::read_wal_cmd_lines(str &buff, int &lines, int &bytes, std::vector<str> &cmd)
+{
+    str line;
+    size_t indx;
+    size_t end;
+    size_t start = 0;
+
+    if (lines == 0)
+    {
+        indx = buff.find("\r\n", start);
+        if (buff[0] != '*')
+            throw ERROR("missing number of lines");
+        try
+        {
+            lines = std::stoi(buff.substr(1), &end);
+        }
+        catch(const std::exception& e)
+        {
+            throw ERROR("unvalid number of lines");
+        }
+        if (lines < 0 || buff.substr(end + 1, 2) != "\r\n")
+            throw ERROR("unvalid number of lines");
+        start = indx + 2;
+    }
+    indx = buff.find("\r\n", start);
+    while (indx != str::npos && cmd.size() != (size_t)lines)
+    {
+        line = buff.substr(start, indx - start);
+        if (line[0] != '$')
+        {
+            if (line.size() != (size_t)bytes)
+                throw ERROR("missing length");
+            cmd.push_back(line);
+            bytes = -1;
+        }
+        else
+        {
+            try
+            {
+                bytes = std::stoi(line.substr(1), &end);
+            }
+            catch (const std::exception& e)
+            {
+                throw ERROR("unvalid length");
+            }
+            if (bytes < 0 || line[end + 1])
+                throw ERROR("unvalid length");
+        }
+        start = indx + 2;
+        indx = buff.find("\r\n", start);
+    }
+}
+
+void Server::read_wal()
+{
+    std::vector<str> cmd;
+    size_t len;
+    int lines = 0;
+    int bytes = 0;
+    int fd = open(config.wal_file.c_str(), O_RDONLY);
+    str str_buff;
+    char buff[BUF_SIZE];
+
+    if (fd == -1)
+    {
+        if (errno == ENOENT)
+        {
+            std::cout << "WAL file not found" << std::endl;
+            return ;
+        }
+        throw std::runtime_error("Failed to open WAL file");
+    }
+    len = read(fd, buff, BUF_SIZE);
+    while (len > 0)
+    {   
+        str_buff.append(buff, len);
+        read_wal_cmd_lines(str_buff, lines, bytes, cmd);
+        if ((size_t)lines == cmd.size())
+        {
+            exec_wal(cmd);
+            cmd.clear();
+            lines = 0;
+            bytes = 0;
+        }
+        len = read(fd, buff, BUF_SIZE);
+    }
 }

@@ -22,7 +22,9 @@ class Val
         long long seconds;
         void *ptr;
         Val::t_type type;
-        size_t recent_usage_idx;
+        Val *prev;
+        Val *next;
+        const char *key;
 
         void delete_Val_ptr();
         void new_Val_ptr(const Val &obj);
@@ -36,7 +38,8 @@ class Val
 class Cache
 {
     std::unordered_map <str, Val> map;
-    std::deque <const char *> recent_usage;
+    Val *front;
+    Val *back;
     public:
         void Set(std::vector<str> &cmd);
         void Lpush(std::vector<str> &cmd);
@@ -59,6 +62,8 @@ class Cache
         void Serialize(const str &db_file);
         void Deserialize(const str &db_file);
         void LRU();
+        void insert(Val &val);
+        void remove(Val &val);
         Cache();
         ~Cache();
 };

@@ -91,6 +91,7 @@ void Cache::Deserialize(const str &db_file)
         }
         read(fd, key, klen);
         key[klen] = '\0';
+        obj.key = key;
         if (obj.type == Val::STR)
         {
             read(fd, &len, 4);
@@ -114,9 +115,9 @@ void Cache::Deserialize(const str &db_file)
             }
             obj.delete_Val_ptr();
             delete[] value;
-            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
-            recent_usage.push_back(obj_it->first.c_str());
-            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
+            obj_it = map.find(key);
+            insert(obj_it->second);
+            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
         }
         else if (obj.type == Val::LIST)
         {
@@ -153,9 +154,9 @@ void Cache::Deserialize(const str &db_file)
                 LRU();
             }
             obj.delete_Val_ptr();
-            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
-            recent_usage.push_back(obj_it->first.c_str());
-            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
+            obj_it = map.find(key);
+            insert(obj_it->second);
+            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
         }
         else if (obj.type == Val::HASH)
         {
@@ -205,9 +206,9 @@ void Cache::Deserialize(const str &db_file)
                 LRU();
             }
             obj.delete_Val_ptr();
-            obj_it = map.find(key); // to have the same key char pointer in recent_usage and in the map
-            recent_usage.push_back(obj_it->first.c_str());
-            obj_it->second.recent_usage_idx = recent_usage.size() - 1;
+            obj_it = map.find(key); 
+            insert(obj_it->second);
+            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
         }
         delete[] key;
     }
@@ -228,42 +229,52 @@ void Cache::Serialize(const str &db_file)
     int len;
     u_char is_ttl;
     str *s_val;
+    Val *val;
 
     write (fd, MAGIC_NUMBER, 8);
     write (fd, &keys_number, 4);
-    for (std::deque <const char *>::iterator it = recent_usage.begin(); it != recent_usage.end(); it++)
+    if (!front->next)
     {
-        std::unordered_map <str, Val>::iterator i = map.find(*it);
-        is_ttl = (i->second.seconds == -1) ? 0 : 1;
+        close(fd);
+        return ;
+    }
+    for (Val *iit = front->next; iit != NULL; iit = iit->next)
+    {
+        std::cout << iit->key << std::endl;
+    }
+    for (Val *it = front->next; it != NULL; it = it->next)
+    {
+        val = it;
+        is_ttl = (val->seconds == -1) ? 0 : 1;
         write (fd, &is_ttl, 1);
         if (is_ttl)
-            write (fd, &i->second.seconds, 8);
-        write(fd, &i->second.type, 1);
-        len = i->first.length();
+            write (fd, &val->seconds, 8);
+        write(fd, &val->type, 1);
+        len = strlen(val->key);
         write (fd, &len, 4);
-        write (fd, i->first.c_str(), len);
-        if (i->second.type == Val::STR)
+        write (fd, val->key, len);
+        if (val->type == Val::STR)
         {
-            s_val = static_cast<str *>(i->second.ptr);
+            s_val = static_cast<str *>(val->ptr);
             len = s_val->length();
             write (fd, &len, 4);
             write (fd, s_val->c_str(), len);
         }
-        else if (i->second.type == Val::LIST)
+        else if (val->type == Val::LIST)
         {
-            keys_number = static_cast<std::deque <str> *>(i->second.ptr)->size();
+            keys_number = static_cast<std::deque <str> *>(val->ptr)->size();
             write (fd, &keys_number, 4);
-            std::deque<str>::iterator end = static_cast<std::deque <str> *>(i->second.ptr)->end();
-            for (std::deque<str>::iterator li = static_cast<std::deque <str> *>(i->second.ptr)->begin(); li != end; li++)
+            std::deque<str>::iterator end = static_cast<std::deque <str> *>(val->ptr)->end();
+            for (std::deque<str>::iterator li = static_cast<std::deque <str> *>(val->ptr)->begin(); li != end; li++)
             {
                 len = li->length();
                 write (fd, &len, 4);
                 write (fd, li->c_str(), len);
             }
         }
-        else if (i->second.type == Val::HASH)
+        else if (val->type == Val::HASH)
         {
-            std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(i->second.ptr);
+            std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(val->ptr);
             keys_number = h->size();
             write(fd, &keys_number, 4);
             for (std::unordered_map<str, str>::iterator hit = h->begin(); hit != h->end(); ++hit)
