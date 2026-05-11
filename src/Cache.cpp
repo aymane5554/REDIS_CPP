@@ -142,8 +142,8 @@ long long Cache::Hset(std::vector<str> &cmd)
         h = static_cast<std::unordered_map<str, str> *>(obj.ptr);
         (*h)[cmd[2]] = cmd[3];
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        insert(it->second);
         it->second.key = it->first.c_str();
+        insert(it->second);
         return 1;
     }
     if (it->second.type != Val::HASH)
@@ -238,6 +238,7 @@ void Cache::Set(std::vector<str> &cmd)
     if (it == map.end())
     {
         it = map.insert(std::make_pair(cmd[1], obj)).first;
+        it->second.key = it->first.c_str();
         insert(it->second);
     }
     else
@@ -247,9 +248,9 @@ void Cache::Set(std::vector<str> &cmd)
         remove(it->second);
         map.erase(it);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
+        it->second.key = it->first.c_str();
         insert(it->second);
     }
-    it->second.key = it->first.c_str();
 }
 
 str Cache::Get(str &Key)
@@ -340,8 +341,8 @@ void Cache::Lpush(std::vector<str> &cmd)
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        insert(it->second);
         it->second.key = it->first.c_str();
+        insert(it->second);
     }
     else
     {
@@ -367,8 +368,8 @@ void Cache::Rpush(std::vector<str> &cmd)
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        insert(it->second);
         it->second.key = it->first.c_str();
+        insert(it->second);
     }
     else
     {

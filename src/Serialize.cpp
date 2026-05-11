@@ -91,7 +91,6 @@ void Cache::Deserialize(const str &db_file)
         }
         read(fd, key, klen);
         key[klen] = '\0';
-        obj.key = key;
         if (obj.type == Val::STR)
         {
             read(fd, &len, 4);
@@ -116,8 +115,8 @@ void Cache::Deserialize(const str &db_file)
             obj.delete_Val_ptr();
             delete[] value;
             obj_it = map.find(key);
+            obj_it->second.key = obj_it->first.c_str();
             insert(obj_it->second);
-            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
         }
         else if (obj.type == Val::LIST)
         {
@@ -155,8 +154,8 @@ void Cache::Deserialize(const str &db_file)
             }
             obj.delete_Val_ptr();
             obj_it = map.find(key);
+            obj_it->second.key = obj_it->first.c_str();
             insert(obj_it->second);
-            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
         }
         else if (obj.type == Val::HASH)
         {
@@ -206,9 +205,15 @@ void Cache::Deserialize(const str &db_file)
                 LRU();
             }
             obj.delete_Val_ptr();
-            obj_it = map.find(key); 
+            obj_it = map.find(key);
+            obj_it->second.key = obj_it->first.c_str();
             insert(obj_it->second);
-            std::cout << "DESERIALIZATION KEY = " << obj_it->second.key << std::endl;
+        }
+        else
+        {
+            perror("Serialization Failed");
+            exit(1);
+            return ;
         }
         delete[] key;
     }
@@ -237,10 +242,6 @@ void Cache::Serialize(const str &db_file)
     {
         close(fd);
         return ;
-    }
-    for (Val *iit = front->next; iit != NULL; iit = iit->next)
-    {
-        std::cout << iit->key << std::endl;
     }
     for (Val *it = front->next; it != NULL; it = it->next)
     {

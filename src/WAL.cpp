@@ -34,7 +34,7 @@ bool Server::exec_wal(std::vector <str> &cmd)
         else
             throw std::runtime_error("Invalid WAL format");
     }
-    catch (std::bad_alloc)
+    catch (std::bad_alloc &e)
     {
         return false;
     }
@@ -64,12 +64,13 @@ int Server::Wal(std::vector <str> &cmd)
     return 0;
 }
 
-void Server::read_wal_cmd_lines(str &buff, int &lines, int &bytes, std::vector<str> &cmd)
+size_t Server::read_wal_cmd_lines(str &buff, int &lines, int &bytes, std::vector<str> &cmd)
 {
     str line;
     size_t indx;
     size_t end;
     size_t start = 0;
+    size_t offset = 0;
 
     if (lines == 0)
     {
@@ -115,6 +116,8 @@ void Server::read_wal_cmd_lines(str &buff, int &lines, int &bytes, std::vector<s
         start = indx + 2;
         indx = buff.find("\r\n", start);
     }
+    offset = start;  
+    return offset;
 }
 
 void Server::read_wal()
@@ -123,6 +126,7 @@ void Server::read_wal()
     size_t len;
     int lines = 0;
     int bytes = 0;
+    size_t offset = 0;
     int fd = open(config.wal_file.c_str(), O_RDONLY);
     str str_buff;
     char buff[BUF_SIZE];
@@ -137,10 +141,11 @@ void Server::read_wal()
         throw std::runtime_error("Failed to open WAL file");
     }
     len = read(fd, buff, BUF_SIZE);
-    while (len > 0)
-    {   
+    while (len > 0 || !str_buff.empty())
+    {
         str_buff.append(buff, len);
-        read_wal_cmd_lines(str_buff, lines, bytes, cmd);
+        offset = read_wal_cmd_lines(str_buff, lines, bytes, cmd);
+        str_buff.erase(0, offset);
         if ((size_t)lines == cmd.size())
         {
             exec_wal(cmd);
