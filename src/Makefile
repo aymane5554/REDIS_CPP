@@ -1,3 +1,4 @@
+c++ = g++
 C++FLAGS=-Wall -Wextra -Werror
 SRCS= Cache.cpp Server.cpp main.cpp Response.cpp Request.cpp Commands.cpp Serialize.cpp LRU.cpp WAL.cpp
 INCS= Cache.hpp Server.hpp

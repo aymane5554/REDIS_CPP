@@ -1,0 +1,10 @@
+services:
+  kv-cache-server:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - data:/data
+    command: ./redis++ --db-file /data/dump.rdb
+volumes:
+  data:

@@ -2,14 +2,30 @@
 
 void Cache::LRU()
 {
-    std::cout << "LRU recent_usage.size =" << recent_usage.size() << std::endl;
-    if (recent_usage.size() > 0)
-    {
-        const char *s;
+    const char *s;
 
-        s = recent_usage.front();
+    std::cout << "LRU executing" << std::endl;
+    if (front != NULL && front->next != NULL)
+    {
+        s = front->next->key;
+        remove(*front->next);
         map.erase(s);
-        recent_usage.pop_front();
     }
-    std::cout << "End of LRU" << std::endl;
+}
+
+void Cache::insert(Val &val)
+{
+    back->next = &val;
+    val.prev = back;
+    val.next = NULL;
+    back = &val;
+}
+
+void Cache::remove(Val &val)
+{
+    if (val.next)
+        val.next->prev = val.prev;
+    val.prev->next = val.next;
+    if (&val == back)
+        back = val.prev;
 }

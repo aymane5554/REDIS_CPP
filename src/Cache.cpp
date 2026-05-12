@@ -5,17 +5,20 @@ Val::Val()
     ptr = NULL;
     seconds = -1;
     type = NONE;
+    prev = NULL;
+    next = NULL;
 }
 
 Val::Val(const Val &obj)
 {
     ptr = NULL;
-    seconds = -1;
-    type = NONE;
     new_Val_ptr(obj);
     copy_Val_ptr(obj);
     this->seconds = obj.seconds;
     this->type = obj.type;
+    prev = obj.prev;
+    next = obj.next;
+    key = obj.key;
 }
 
 Val &Val::operator=(const Val &obj)
@@ -27,6 +30,9 @@ Val &Val::operator=(const Val &obj)
     this->type = obj.type;
     new_Val_ptr(obj);
     copy_Val_ptr(obj);
+    prev = obj.prev;
+    next = obj.next;
+    key = obj.key;
     return *this;
 }
 
@@ -112,9 +118,8 @@ str Cache::Type(str &Key)
     it = map.find(Key);
     if (it == map.end())
         throw ERROR("+none\r\n");
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     if (it->second.type == Val::STR)
         return "+string\r\n";
     if (it->second.type == Val::HASH)
@@ -137,8 +142,8 @@ long long Cache::Hset(std::vector<str> &cmd)
         h = static_cast<std::unordered_map<str, str> *>(obj.ptr);
         (*h)[cmd[2]] = cmd[3];
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        it->second.key = it->first.c_str();
+        insert(it->second);
         return 1;
     }
     if (it->second.type != Val::HASH)
@@ -146,9 +151,8 @@ long long Cache::Hset(std::vector<str> &cmd)
     std::unordered_map<str, str> *h = static_cast<std::unordered_map<str, str> *>(it->second.ptr);
     bool is_new_field = (h->find(cmd[2]) == h->end());
     (*h)[cmd[2]] = cmd[3];
-    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     return is_new_field ? 1 : 0;
 }
 
@@ -165,9 +169,8 @@ str Cache::Hget(std::vector<str> &cmd)
     std::unordered_map<str, str>::iterator field_it = h->find(cmd[2]);
     if (field_it == h->end())
         throw ERROR("$-1\r\n");
-    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     return field_it->second;
 }
 
@@ -189,9 +192,8 @@ void Cache::Hgetall(str &key, str &res_buf)
         res_buf += "$" + std::to_string(field_it->second.size()) + "\r\n";
         res_buf += field_it->second + "\r\n";
     }
-    recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
 }
 
 long long Cache::Hdel(std::vector<str> &cmd)
@@ -207,22 +209,20 @@ long long Cache::Hdel(std::vector<str> &cmd)
     std::unordered_map<str, str>::iterator field_it = h->find(cmd[2]);
     if (field_it == h->end())
     {
-        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        remove(it->second);
+        insert(it->second);
         return 0;
     }
     h->erase(field_it);
     if (h->empty())
     {
-        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
+        remove(it->second);
         map.erase(it);
     }
     else
     {
-        recent_usage.erase(recent_usage.begin() + it->second.recent_usage_idx);
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        remove(it->second);
+        insert(it->second);
     }
     return 1;
 }
@@ -238,18 +238,18 @@ void Cache::Set(std::vector<str> &cmd)
     if (it == map.end())
     {
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        it->second.key = it->first.c_str();
+        insert(it->second);
     }
     else
     {
         if (it->second.type != Val::STR)
-            throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+            throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");        
+        remove(it->second);
         map.erase(it);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        it->second.key = it->first.c_str();
+        insert(it->second);
     }
 }
 
@@ -262,9 +262,8 @@ str Cache::Get(str &Key)
         throw ERROR("$-1\r\n");
     if (it->second.type != Val::STR)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     return *static_cast<str *>(it->second.ptr);
 }
 
@@ -277,7 +276,7 @@ void Cache::Del(str &Key)
     {
         throw ERROR(":0\r\n");
     }
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
+    remove(it->second);
     map.erase(it);
 }
 
@@ -290,9 +289,8 @@ bool Cache::Exists(str &Key)
     {
         throw ERROR(":0\r\n");
     }
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     return true;
 }
 
@@ -307,9 +305,8 @@ void Cache::Expire(str &Key, long long seconds)
         throw ERROR(":0\r\n");
     }
     it->second.seconds = time + seconds;
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
 }
 
 long long Cache::Ttl(str &Key)
@@ -321,16 +318,14 @@ long long Cache::Ttl(str &Key)
     {
         throw ERROR(":-2\r\n");
     }
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     return std::time(NULL) -  it->second.seconds;
 }
 
 void Cache::Flush()
 {
     map.clear();
-    recent_usage.clear();
 }
 
 void Cache::Lpush(std::vector<str> &cmd)
@@ -346,8 +341,8 @@ void Cache::Lpush(std::vector<str> &cmd)
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(obj.ptr)->push_front(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        it->second.key = it->first.c_str();
+        insert(it->second);
     }
     else
     {
@@ -355,9 +350,8 @@ void Cache::Lpush(std::vector<str> &cmd)
             throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(it->second.ptr)->push_front(cmd[i]);
-        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        remove(it->second);
+        insert(it->second);
     }
 }
 
@@ -374,8 +368,8 @@ void Cache::Rpush(std::vector<str> &cmd)
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(obj.ptr)->push_back(cmd[i]);
         it = map.insert(std::make_pair(cmd[1], obj)).first;
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        it->second.key = it->first.c_str();
+        insert(it->second);
     }
     else
     {
@@ -383,9 +377,8 @@ void Cache::Rpush(std::vector<str> &cmd)
             throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
         for (size_t i = 2; i < cmd.size(); i++)
             static_cast<std::deque<str> *>(it->second.ptr)->push_back(cmd[i]);
-        recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-        recent_usage.push_back(it->first.c_str());
-        it->second.recent_usage_idx = recent_usage.size() - 1;
+        remove(it->second);
+        insert(it->second);
     }
 }
 
@@ -401,9 +394,8 @@ void Cache::Lpop(str &key)
     if (it->second.type != Val::LIST)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     static_cast<std::deque<str> *>(it->second.ptr)->pop_front();
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
 }
 
 void Cache::Rpop(str &key)
@@ -418,9 +410,8 @@ void Cache::Rpop(str &key)
     if (it->second.type != Val::LIST)
         throw ERROR("-WRONGTYPE Operation against a key holding the wrong kind of value\r\n");
     static_cast<std::deque<str> *>(it->second.ptr)->pop_back();
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
 }
 
 void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
@@ -461,9 +452,8 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
         res_buf = "*0\r\n";
         return ;
     }
-    recent_usage.erase(recent_usage.begin()+ it->second.recent_usage_idx);
-    recent_usage.push_back(it->first.c_str());
-    it->second.recent_usage_idx = recent_usage.size() - 1;
+    remove(it->second);
+    insert(it->second);
     res_buf = "*" + std::to_string((stopi - starti) + 1) + "\r\n";
     for (size_t i = starti; i <= stopi; i++)
     {
@@ -474,8 +464,11 @@ void Cache::Lrange(std::vector<str> &cmd, str &res_buf)
 
 Cache::Cache()
 {
+    front = new Val();
+    back = front;
 }
 
 Cache::~Cache()
 {
+    delete front;
 }

@@ -145,6 +145,8 @@ class Server
         void ttl_thread();
         int Wal(std::vector <str> &cmd);
         void read_wal();
+        size_t read_wal_cmd_lines(str &buff, int &lines, int &bytes, std::vector<str> &cmd);
+        bool exec_wal(std::vector <str> &cmd);
         explicit Server(const RuntimeConfig &cfg);
         ~Server();
 };

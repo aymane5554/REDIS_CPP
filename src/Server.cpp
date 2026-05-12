@@ -56,6 +56,7 @@ void Server::run()
         std::cerr << e.what() << '\n';
         exit(1);
     }
+    cache.LRU();
     while (!sigint)
     {
         int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
