@@ -21,8 +21,8 @@ Implements the full Redis operational model: **RESP2 wire protocol**, **non-bloc
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    redis++ process                   │
-│                                                      │
+│                    redis++ process                  │
+│                                                     │
 │  ┌──────────┐    ┌────────────┐    ┌─────────────┐  │
 │  │  epoll   │───▶│  Request   │───▶│  Commands   │  │
 │  │  loop    │    │  parser    │    │  dispatch   │  │
