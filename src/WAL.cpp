@@ -143,6 +143,8 @@ void Server::read_wal()
     len = read(fd, buff, BUF_SIZE);
     while (len > 0 || !str_buff.empty())
     {
+        if (len <= 0 && str_buff.find("\r\n") == str::npos)
+            break ;
         str_buff.append(buff, len);
         offset = read_wal_cmd_lines(str_buff, lines, bytes, cmd);
         str_buff.erase(0, offset);
