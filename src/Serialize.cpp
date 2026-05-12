@@ -41,6 +41,19 @@ bool hashed(std::unordered_map<str, str> *hash, char *field, char *value)
     return true;
 }
 
+void read_wrapper(int fd, void *buf, size_t count)
+{
+    ssize_t bytes_read = 0;
+
+    bytes_read = read(fd, buf, count);
+    if (bytes_read <= 0)
+    {
+        perror("Read error");
+        exit(1);
+    }
+
+}
+
 void Cache::Deserialize(const str &db_file)
 {
     char buff[8];
@@ -68,39 +81,39 @@ void Cache::Deserialize(const str &db_file)
         exit(1);
         return ;
     }
-    read(fd, buff, 8);
+    read_wrapper(fd, buff, 8);
     if (memcmp(buff, buff2, 8))
     {
         perror("Unvalid file format");
         return ;
     }
-    read(fd, &keys_num, 4);
+    read_wrapper(fd, &keys_num, 4);
     for (int i = 0; i < keys_num; i++)
     {
         obj.seconds = -1;
-        read(fd, &is_ttl, 1);
+        read_wrapper(fd, &is_ttl, 1);
         if (is_ttl)
-            read(fd, &obj.seconds, 8);
-        read(fd, &obj.type, 1);
-        read(fd, &klen, 4);
+            read_wrapper(fd, &obj.seconds, 8);
+        read_wrapper(fd, &obj.type, 1);
+        read_wrapper(fd, &klen, 4);
         key = new (std::nothrow) char[klen + 1];
         while (key == NULL)
         {
             LRU();
             key = new (std::nothrow) char[klen + 1];
         }
-        read(fd, key, klen);
+        read_wrapper(fd, key, klen);
         key[klen] = '\0';
         if (obj.type == Val::STR)
         {
-            read(fd, &len, 4);
+            read_wrapper(fd, &len, 4);
             value = new (std::nothrow) char[len + 1];
             while (value == NULL)
             {
                 LRU();
                 value = new (std::nothrow) char[len + 1];
             }
-            read(fd, value, len);
+            read_wrapper(fd, value, len);
             value[len] = '\0';
             obj.ptr = new (std::nothrow) str(value);
             while (obj.ptr == NULL)
@@ -130,17 +143,17 @@ void Cache::Deserialize(const str &db_file)
                 LRU();
                 obj.ptr = new (std::nothrow) std::deque<str>;
             }
-            read(fd, &li_size, 4);
+            read_wrapper(fd, &li_size, 4);
             for (int li = 0; li < li_size; li++)
             {
-                read (fd, &li_val_len, 4);
+                read_wrapper(fd, &li_val_len, 4);
                 li_ptr = new (std::nothrow) char[li_val_len + 1];
                 while (li_ptr == NULL)
                 {
                     LRU();
                     li_ptr = new (std::nothrow) char[li_val_len + 1];
                 }
-                read (fd, li_ptr, li_val_len);
+                read_wrapper(fd, li_ptr, li_val_len);
                 li_ptr[li_val_len] = '\0';
                 while (!pushed(static_cast<std::deque<str> *>(obj.ptr), li_ptr))
                 {
@@ -171,27 +184,27 @@ void Cache::Deserialize(const str &db_file)
                 LRU();
                 obj.ptr = new (std::nothrow) std::unordered_map<str, str>;
             }
-            read(fd, &fields_size, 4);
+            read_wrapper(fd, &fields_size, 4);
             for (int h = 0; h < fields_size; h++)
             {
-                read(fd, &field_len, 4);
+                read_wrapper(fd, &field_len, 4);
                 field_ptr = new (std::nothrow) char[field_len + 1];
                 while (field_ptr == NULL)
                 {
                     LRU();
                     field_ptr = new (std::nothrow) char[field_len + 1];
                 }
-                read(fd, field_ptr, field_len);
+                read_wrapper(fd, field_ptr, field_len);
                 field_ptr[field_len] = '\0';
 
-                read(fd, &value_len, 4);
+                read_wrapper(fd, &value_len, 4);
                 value_ptr = new (std::nothrow) char[value_len + 1];
                 while (value_ptr == NULL)
                 {
                     LRU();
                     value_ptr = new (std::nothrow) char[value_len + 1];
                 }
-                read(fd, value_ptr, value_len);
+                read_wrapper(fd, value_ptr, value_len);
                 value_ptr[value_len] = '\0';
                 while (!hashed(static_cast<std::unordered_map<str, str> *>(obj.ptr), field_ptr, value_ptr))
                 {
